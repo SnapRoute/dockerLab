@@ -1,4 +1,5 @@
 - [Introduction ](#introduction)
+- [Getting Started ](#getting_started)
 - [Topology ](#topology)
 - [API ](#api)
 	- [Introduction to the API ](#introduction_to_the_api)
@@ -24,8 +25,18 @@ This lab will be implemented in the following stages:
 * [Stage 3 ](#stage_3) Enable eBGP on directly connected interfaces and verify neighborship
 * [Stage 4 ](#stage_4) Redistribute connected interfaces and verify routes are present
 
+## Getting Started <a name="getting_started"></a>
+
+To start the lab, execute the **labtool.py** script with --lab argument **lab1**
+
+```bash
+
+agossett@docker-dev:~/dockerLab$ sudo python ./labtool.py --lab lab1
+
+```
+
 ## Topology <a name="topology"></a>
-----------------------------------
+
 ![alt text](https://raw.githubusercontent.com/agccie/dsnap/master/labs/lab1/lab1_diagram.png)
 
 ### IP Information <a name="ip_information"></a>

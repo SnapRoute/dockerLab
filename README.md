@@ -9,6 +9,17 @@ root@ubuntu:~/$ curl -sSL https://raw.githubusercontent.com/SnapRoute/dockerLab/
 
 ```
 
+### Docker Privileges
+
+You may want to add users to the docker group so they can execute docker 
+commands without root access.  
+
+```bash
+user1@ubuntu:~/$ sudo usermod -aG docker user1
+
+# Remember that you will have to log out and back in for this to take effect!
+```
+
 ## Manual Setup
 
 The SnapRoute docker lab is dependent on a Linux kernel locally running docker 
@@ -29,6 +40,8 @@ root@ubuntu:~/$ apt-get update && apt-get install -y git python
 # install docker via get.docker.com script
 root@ubuntu:~/$ curl -sSL https://get.docker.com/ | sh
 root@ubuntu:~/$ service docker start
+# (optional) add a username to docker group
+root@ubuntu:~/$ usermod -aG docker user1
 
 # git clone to pull dockerLab scripts
 root@ubuntu:~/$ git clone https://github.com/SnapRoute/dockerLab.git

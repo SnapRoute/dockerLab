@@ -42,7 +42,7 @@ Once docker is installed, you can execute  **labtool.py** to spin up containers
 running SnapRoute Flexswitch.  
 
 ### Available Labs:
-* [Lab1: Introduction to Flexswitch](./tree/master/labs/lab1/README.md)
+* [Lab1: Introduction to Flexswitch](./labs/lab1/README.md)
 
 ```bash
 

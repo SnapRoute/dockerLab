@@ -1,11 +1,38 @@
 
 ## Easy Setup
 
-Setup your docker environment with a single command:
+Setup your SnapRoute dockerLab environment with a single command:
 
 ```bash
 
-user@ubuntu:~/$ curl -sSL https://raw.githubusercontent.com/SnapRoute/dockerLab/master/bash/install.sh | sh
+root@ubuntu:~/$ curl -sSL https://raw.githubusercontent.com/SnapRoute/dockerLab/master/bash/install.sh | sh
+
+```
+
+## Manual Setup
+
+The SnapRoute docker lab is dependent on a Linux kernel locally running docker 
+service and python 2.7. Additionally, it's useful to have git installed to 
+pull fresh lab modules.
+
+Use apt-get, yum, or pkg to install
+* docker
+* python2.7
+* git
+
+Finally, pull the public repository via git clone command.  For example:
+
+```bash
+# install git and python
+root@ubuntu:~/$ apt-get update && apt-get install -y git python
+
+# install docker via get.docker.com script
+root@ubuntu:~/$ curl -sSL https://get.docker.com/ | sh
+root@ubuntu:~/$ service docker start
+
+# git clone to pull dockerLab scripts
+root@ubuntu:~/$ git clone https://github.com/SnapRoute/dockerLab.git
+root@ubuntu:~/$ python dockerLab/labtool.py --help
 
 ```
 
@@ -19,7 +46,7 @@ running SnapRoute Flexswitch.
 
 ```bash
 
-user@ubuntu:~/$ python dockerLab/labtool.py --help
+root@ubuntu:~/$ python dockerLab/labtool.py --help
 usage: labtool.py [-h] [--describe] [--lab LAB] [--stage STAGE] [--cleanup]
                   [--repair] [--debug {debug,warn,info,error}]
 

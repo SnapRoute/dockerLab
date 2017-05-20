@@ -14,8 +14,8 @@ user@ubuntu:~/$ curl -sSL https://raw.githubusercontent.com/SnapRoute/dockerLab/
 Once docker is installed, you can execute  **labtool.py** to spin up containers
 running SnapRoute Flexswitch.  
 
-Available Labs:
-   [Lab1: Introduction to Flexswitch] (./labs/lab1/README.md)
+### Available Labs:
+* [Lab1: Introduction to Flexswitch] (./labs/lab1/README.md)
 
 ```bash
 

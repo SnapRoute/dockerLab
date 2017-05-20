@@ -37,7 +37,7 @@ agossett@docker-dev:~/dockerLab$ sudo python ./labtool.py --lab lab1
 
 ## Topology <a name="topology"></a>
 
-![alt text](https://raw.githubusercontent.com/agccie/dsnap/master/labs/lab1/lab1_diagram.png)
+![alt text](./lab1_diagram.png)
 
 ### IP Information <a name="ip_information"></a>
 

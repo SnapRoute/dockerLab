@@ -175,7 +175,6 @@ leaf1#
 ```
 
 ## Stage 1 <a name="stage_1"></a>
-----------
 
 To enable LLDP, send an update to the LLDPGlobal object with the attribute 
 'Enable' set to True.  
@@ -326,7 +325,6 @@ Interface eth2
 ```
 
 ## Stage 2 <a name="stage_2"></a>
-----------
 
 To enable the interface, send an update to Port object referencing eth1 and 
 AdminState set to Up. To configure the interface as L3, create an IPv4Intf with
@@ -497,7 +495,6 @@ Applying Show:
 ```
 
 ## Stage 3 <a name="stage_3"></a>
-----------
 
 The first step is to update the BGPGlobal object setting the ASN and RouterID.
 Next, create a BGPv4Neighbor object specifying the Neighbor IP address,
@@ -714,7 +711,6 @@ Applying Show:
 ```
 
 ## Stage 4 <a name="stage_4"></a>
-----------
 
 Redistribution requires policies that can be used for granual matching of 
 routes to be redistributed from one routing protocol to another.  In this 

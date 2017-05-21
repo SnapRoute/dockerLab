@@ -56,6 +56,7 @@ running SnapRoute Flexswitch.
 
 ### Available Labs:
 * [Lab1: Introduction to Flexswitch](./labs/lab1/README.md)
+* [MyClosNetwork: Custom Networks](./labs/myClosNetwork/README.md)
 
 ```bash
 

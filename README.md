@@ -1,4 +1,12 @@
 
+## Introduction
+
+Snaproute dockerLab allows you to quicky and easily deploy switches 
+running FlexSwitch within a virtual environment.
+
+Use this tool to familiarize yourself with SnapRoute Flexswitch along
+with testing custom topologies specific to your network!
+
 ## Easy Setup
 
 Setup your SnapRoute dockerLab environment with a single command:

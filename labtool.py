@@ -220,11 +220,11 @@ def get_topology(topology_file = None):
                     "remote-device":d1_lower
                 })
     except IOError as e:
-        logger.error("failed to open provided topology json file: %s" % (
+        logger.error("failed to open topology json file: %s" % (
             topology_file))
         return None
     except ValueError as e:
-        logger.error("failed to parse provided topology json file: %s" % (
+        logger.error("failed to parse topology json file: %s" % (
             topology_file))
         return None
 
@@ -566,8 +566,9 @@ def get_labs():
                     valid_stages = False
                     break
             if not valid_stages: continue
-            all_labs[r1.group("id").lower()] = {
-                "id": r1.group("id").lower(),
+            lab_id = re.sub(" ","_", r1.group("id").lower().strip())
+            all_labs[lab_id] = {
+                "id": lab_id,
                 "name": r1.group("name"),
                 "description": r1.group("desc"),
                 "path": l.__path__[0],
@@ -644,7 +645,7 @@ if __name__ == "__main__":
     # handle refresh/describe options first
     if args.describe and not args.lab:
         print "\nThe following %s labs are available:\n" % len(all_labs)
-        for l in all_labs:
+        for l in sorted(all_labs.keys()):
             print describe_lab(all_labs[l])
         sys.exit()
 

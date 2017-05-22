@@ -27,7 +27,7 @@ This lab will be implemented in the following stages:
 
 ## Getting Started <a name="getting_started"></a>
 
-To start the lab, enter into the dockerLab folder created during [docker lab install](../../dockerLab/README.md) and execute the **labtool.py** script with --lab argument **lab1**
+To start the lab, enter into the dockerLab folder created during [docker lab install](../dockerLab/README.md) and execute the **labtool.py** script with --lab argument **lab1**
 
 ```bash
 

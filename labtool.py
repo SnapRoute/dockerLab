@@ -382,7 +382,7 @@ def connection_exists(pid1, pid2, link1, link2):
 
     link1_exists = False
     link2_exists = False
-    out = exec_cmd("ip -o -n %s link" % pid1, ignore_exception=True)
+    out = exec_cmd("ip netns exec %s ip -o link" % pid1, ignore_exception=True)
     if out is not None:
         for l in out.split("\n"):
             r1 = re.search(link_state_reg, l.strip())
@@ -390,7 +390,7 @@ def connection_exists(pid1, pid2, link1, link2):
                 if r1.group("intf") == link1: 
                     link1_exists = True
                     break
-    out = exec_cmd("ip -o -n %s link" % pid2, ignore_exception=True)
+    out = exec_cmd("ip netns exec %s ip -o link" % pid2, ignore_exception=True)
     if out is not None:
         for l in out.split("\n"):
             r1 = re.search(link_state_reg, l.strip())
@@ -409,6 +409,10 @@ def create_connection(pid1, pid2, link1, link2):
         raise Exception("invalid connection arguments: %s, %s, %s, %s" % (
             pid1, pid2, link1, link2))
 
+    # delete existing ethS/ethD in main namespace (ignore errors)
+    exec_cmd("ip link delete ethS type veth", ignore_exception=True)
+    exec_cmd("ip link delete ethD type veth", ignore_exception=True)
+
     # list of commands to execute
     cmds = ["mkdir -p %s" % netns_dir]
 
@@ -424,10 +428,10 @@ def create_connection(pid1, pid2, link1, link2):
     cmds.append("ip link add ethS type veth peer name ethD")
     cmds.append("ip link set ethS netns %s" % pid1)
     cmds.append("ip link set ethD netns %s" % pid2)
-    cmds.append("ip -n %s link set ethS name %s" % (pid1, link1))
-    cmds.append("ip -n %s link set ethD name %s" % (pid2, link2))
-    cmds.append("ip -n %s link set %s up" % (pid1, link1))
-    cmds.append("ip -n %s link set %s up" % (pid2, link2))
+    cmds.append("ip netns exec %s ip link set ethS name %s" % (pid1, link1))
+    cmds.append("ip netns exec %s ip link set ethD name %s" % (pid2, link2))
+    cmds.append("ip netns exec %s ip link set %s up" % (pid1, link1))
+    cmds.append("ip netns exec %s ip link set %s up" % (pid2, link2))
 
     # execute commands
     for c in cmds: exec_cmd(c)

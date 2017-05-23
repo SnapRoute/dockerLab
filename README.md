@@ -26,7 +26,7 @@ sudo apt install curl
 To continue, follow the instructions from the target distro (apt, yum, etc.) to install curl:
 
 ```bash
- sudo apt install curl
+root@ubuntu:~/$ sudo apt install curl
 [sudo] password for ubuntu: 
 Reading package lists... Done
 Building dependency tree       

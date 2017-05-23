@@ -58,6 +58,8 @@ The above shows that "user1" is in the "docker" group.
 
 ## Manual Setup
 
+If you followed the steps in the [Easy Setup](#easy-setup) section, you can skip ahead to [Usage](#usage).
+
 The SnapRoute docker lab is dependent on a Linux kernel locally running docker 
 service and python 2.7. Additionally, it's useful to have git installed to 
 pull fresh lab modules.

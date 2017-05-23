@@ -27,7 +27,6 @@ To continue, follow the instructions from the target distro (apt, yum, etc.) to 
 
 ```bash
 root@ubuntu:~/$ sudo apt install curl
-[sudo] password for ubuntu: 
 Reading package lists... Done
 Building dependency tree       
 Reading state information... Done

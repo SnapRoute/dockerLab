@@ -25,6 +25,12 @@ This lab will be implemented in the following stages:
 * [Stage 3 ](#stage_3) Enable eBGP on directly connected interfaces and verify neighborship
 * [Stage 4 ](#stage_4) Redistribute connected interfaces and verify routes are present
 
+**labtool** can initialize the setup in any stage using the --stage option. For example, to complete the full configuration you can initialize the lab in the finally stage:
+
+```bash
+agossett@docker-dev:~/dockerLab$ sudo python ./labtool.py --lab lab1 --stage 4
+```
+
 ## Getting Started <a name="getting_started"></a>
 
 To start the lab, enter into the dockerLab folder created during [docker lab install](https://github.com/SnapRoute/dockerLab/blob/master/README.md) and execute the **labtool.py** script with --lab argument **lab1**

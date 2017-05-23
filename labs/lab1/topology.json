@@ -5,8 +5,8 @@
         {"name":"leaf3", "port":"8003"}
     ],
     "connections":[
-        {"leaf1":"eth1","leaf2":"eth1"},
-        {"leaf1":"eth2","leaf3":"eth1"},
-        {"leaf2":"eth2","leaf3":"eth2"}
+        {"leaf1":"fpPort1","leaf2":"fpPort1"},
+        {"leaf1":"fpPort2","leaf3":"fpPort1"},
+        {"leaf2":"fpPort2","leaf3":"fpPort2"}
     ]
 }

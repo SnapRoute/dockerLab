@@ -47,7 +47,7 @@ agossett@docker-dev:~/dockerLab$ sudo python ./labtool.py --lab lab1
 
 ### IP Information <a name="ip_information"></a>
 
-| Device   | BGP ASN | Loopback1   | eth1        |  eth2       |
+| Device   | BGP ASN | Loopback1   | fpPort1     |  fpPort2    |
 | -------- |:--------|:-----------:|:-----------:| -----------:|
 | leaf1    | 65001   | 10.0.0.1/32 | 10.1.1.1/30 | 10.1.3.1/30 |
 | leaf2    | 65002   | 10.0.0.2/32 | 10.1.1.2/30 | 10.1.2.1/30 |
@@ -234,11 +234,11 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/LLDPIntfs' | python
                 "EnabledCapabilities": "",
                 "HoldTime": "1m46.475105667s",
                 "IfIndex": 1,
-                "IntfRef": "eth1",
-                "LocalPort": "eth1",
+                "IntfRef": "fpPort1",
+                "LocalPort": "fpPort1",
                 "PeerHostName": "leaf2",
                 "PeerMac": "3e:19:a9:4f:99:8c",
-                "PeerPort": "eth1",
+                "PeerPort": "fpPort1",
                 "PortDescription": "Host ethernet Port",
                 "ReceivedFrames": 47,
                 "SendFrames": 531,
@@ -254,11 +254,11 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/LLDPIntfs' | python
                 "EnabledCapabilities": "",
                 "HoldTime": "1m31.223135787s",
                 "IfIndex": 2,
-                "IntfRef": "eth2",
-                "LocalPort": "eth2",
+                "IntfRef": "fpPort2",
+                "LocalPort": "fpPort2",
                 "PeerHostName": "leaf3",
                 "PeerMac": "5a:28:43:9d:51:15",
-                "PeerPort": "eth1",
+                "PeerPort": "fpPort1",
                 "PortDescription": "Host ethernet Port",
                 "ReceivedFrames": 42,
                 "SendFrames": 529,
@@ -298,9 +298,9 @@ Interface eth0
   Received Frames is 0
   Enabled: True
 
-Interface eth1
+Interface fpPort1
   IfIndex is 1
-  Peer Port is eth1
+  Peer Port is fpPort1
   Peer HostName is leaf2
   Peer Port Description is Host ethernet Port
   Peer Mac Address is 3e:19:a9:4f:99:8c
@@ -313,9 +313,9 @@ Interface eth1
   Received Frames is 49
   Enabled: True
 
-Interface eth2
+Interface fpPort2
   IfIndex is 2
-  Peer Port is eth1
+  Peer Port is fpPort1
   Peer HostName is leaf3
   Peer Port Description is Host ethernet Port
   Peer Mac Address is 5a:28:43:9d:51:15
@@ -332,13 +332,13 @@ Interface eth2
 
 ## Stage 2 <a name="stage_2"></a>
 
-To enable the interface, send an update to Port object referencing eth1 and 
+To enable the interface, send an update to Port object referencing fpPort1 and 
 AdminState set to Up. To configure the interface as L3, create an IPv4Intf with
-IP address referencing eth1.  Ensure that the AdminState of the IPv4Intf is UP.
-Repeat for interface eth2.
+IP address referencing fpPort1.  Ensure that the AdminState of the IPv4Intf is UP.
+Repeat for interface fpPort2.
 
 For loopback interfaces, send a create for LogicalIntf specifying the name of
-the loopback interface. Then, similar to the eth1, create an IPv4Intf object
+the loopback interface. Then, similar to the fpPort1, create an IPv4Intf object
 with the appropriate IP address referencing Loopback1.
 
 Finally, verify the state by reading the IPv4Intf state object.
@@ -349,7 +349,7 @@ Verify connectivty via ping.
 ### API <a name="stage_2_api"></a>
 
 ```
-root@leaf1:~# curl -sX PATCH -d '{"IntfRef":"eth1", "AdminState":"UP"}' 'http://localhost:8080/public/v1/config/Port' | python -m json.tool
+root@leaf1:~# curl -sX PATCH -d '{"IntfRef":"fpPort1", "AdminState":"UP"}' 'http://localhost:8080/public/v1/config/Port' | python -m json.tool
 {
     "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PATCH, DELETE",
@@ -358,7 +358,7 @@ root@leaf1:~# curl -sX PATCH -d '{"IntfRef":"eth1", "AdminState":"UP"}' 'http://
     "ObjectId": "c9d260cc-dee0-4f34-478d-83b6586209a1",
     "Result": "Success"
 }
-root@leaf1:~# curl -sX PATCH -d '{"IntfRef":"eth2", "AdminState":"UP"}' 'http://localhost:8080/public/v1/config/Port' | python -m json.tool
+root@leaf1:~# curl -sX PATCH -d '{"IntfRef":"fpPort2", "AdminState":"UP"}' 'http://localhost:8080/public/v1/config/Port' | python -m json.tool
 {
     "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PATCH, DELETE",
@@ -368,7 +368,7 @@ root@leaf1:~# curl -sX PATCH -d '{"IntfRef":"eth2", "AdminState":"UP"}' 'http://
     "Result": "Success"
 }
 
-root@leaf1:~# curl -sX POST -d '{"IntfRef":"eth1", "AdminState":"UP", "IpAddr":"10.1.1.1/30"}' 'http://localhost:8080/public/v1/config/IPv4Intf' | python -m json.tool
+root@leaf1:~# curl -sX POST -d '{"IntfRef":"fpPort1", "AdminState":"UP", "IpAddr":"10.1.1.1/30"}' 'http://localhost:8080/public/v1/config/IPv4Intf' | python -m json.tool
 {
     "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PATCH, DELETE",
@@ -378,7 +378,7 @@ root@leaf1:~# curl -sX POST -d '{"IntfRef":"eth1", "AdminState":"UP", "IpAddr":"
     "Result": "Success"
 }
 
-root@leaf1:/# curl -sX POST -d '{"IntfRef":"eth2", "AdminState":"UP", "IpAddr":"10.1.3.1/30"}' 'http://localhost:8080/public/v1/config/IPv4Intf' | python -m json.tool
+root@leaf1:/# curl -sX POST -d '{"IntfRef":"fpPort2", "AdminState":"UP", "IpAddr":"10.1.3.1/30"}' 'http://localhost:8080/public/v1/config/IPv4Intf' | python -m json.tool
 {
     "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PATCH, DELETE",
@@ -418,7 +418,7 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/IPv4Intfs' | python
         {
             "Object": {
                 "IfIndex": 1,
-                "IntfRef": "eth1",
+                "IntfRef": "fpPort1",
                 "IpAddr": "10.1.1.1/30",
                 "L2IntfId": 1,
                 "L2IntfType": "port",
@@ -448,7 +448,7 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/IPv4Intfs' | python
         {
             "Object": {
                 "IfIndex": 2,
-                "IntfRef": "eth2",
+                "IntfRef": "fpPort2",
                 "IpAddr": "10.1.3.1/30",
                 "L2IntfId": 2,
                 "L2IntfType": "port",
@@ -473,15 +473,15 @@ leaf1#conf
 
 *** Configuration will only be applied once 'apply' command is entered ***
 
-leaf1(config)#interface eth 1
-leaf1(config-if-eth-1)#ip address 10.1.1.1/30
-leaf1(config-if-eth-1-ip-10.1.1.1/30)#no shut
-leaf1(config-if-eth-1-ip-10.1.1.1/30)#apply
+leaf1(config)#interface fpPort 1
+leaf1(config-if-fpPort-1)#ip address 10.1.1.1/30
+leaf1(config-if-fpPort-1-ip-10.1.1.1/30)#no shut
+leaf1(config-if-fpPort-1-ip-10.1.1.1/30)#apply
 
-leaf1(config)#interface eth 2
-leaf1(config-if-eth-1)#ip address 10.1.3.1/30
-leaf1(config-if-eth-1-ip-10.1.1.1/30)#no shut
-leaf1(config-if-eth-1-ip-10.1.1.1/30)#apply
+leaf1(config)#interface fpPort 2
+leaf1(config-if-fpPort-1)#ip address 10.1.3.1/30
+leaf1(config-if-fpPort-1-ip-10.1.1.1/30)#no shut
+leaf1(config-if-fpPort-1-ip-10.1.1.1/30)#apply
 
 leaf1(config)#interface logical Loopback1
 leaf1(config-if)#ip address 10.0.0.1/32
@@ -494,9 +494,9 @@ Applying Show:
 ------------------------------------------------------------------
  Interface    IP Address     OperState    DownEvents    Last Flap
 ------------------------------------------------------------------
- eth1         10.1.1.1/30    UP           0
+ fpPort1      10.1.1.1/30    UP           0
  Loopback1    10.0.0.1/32    UP           0
- eth2         10.1.3.1/30    UP           0
+ fpPort2      10.1.3.1/30    UP           0
 
 ```
 
@@ -504,7 +504,7 @@ Applying Show:
 
 The first step is to update the BGPGlobal object setting the ASN and RouterID.
 Next, create a BGPv4Neighbor object specifying the Neighbor IP address,
-PeerAS, and UpdateSource for both interfaces eth1 and eth2.
+PeerAS, and UpdateSource for both interfaces fpPort1 and fpPort2.
 
 Repeat on all leaves.  Verify that BGPGlobal state object has the correct
 attributes and that the neighbors are in established state.

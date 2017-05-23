@@ -8,13 +8,13 @@
         {"name":"spine2", "port":"8006"}
     ],
     "connections":[
-        {"spine1":"eth1","leaf1":"eth1"},
-        {"spine1":"eth2","leaf2":"eth1"},
-        {"spine1":"eth3","leaf3":"eth1"},
-        {"spine1":"eth4","leaf4":"eth1"},
-        {"spine2":"eth1","leaf1":"eth2"},
-        {"spine2":"eth2","leaf2":"eth2"},
-        {"spine2":"eth3","leaf3":"eth2"},
-        {"spine2":"eth4","leaf4":"eth2"}
+        {"spine1":"fpPort1","leaf1":"fpPort1"},
+        {"spine1":"fpPort2","leaf2":"fpPort1"},
+        {"spine1":"fpPort3","leaf3":"fpPort1"},
+        {"spine1":"fpPort4","leaf4":"fpPort1"},
+        {"spine2":"fpPort1","leaf1":"fpPort2"},
+        {"spine2":"fpPort2","leaf2":"fpPort2"},
+        {"spine2":"fpPort3","leaf3":"fpPort2"},
+        {"spine2":"fpPort4","leaf4":"fpPort2"}
     ]
 }

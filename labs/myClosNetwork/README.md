@@ -78,14 +78,14 @@ agossett@docker-dev:~/dockerLab/labs/myClosNetwork$ cat topology.json
         {"name":"spine2", "port":"8006"}
     ],
     "connections":[
-        {"spine1":"eth1","leaf1":"eth1"},
-        {"spine1":"eth2","leaf2":"eth1"},
-        {"spine1":"eth3","leaf3":"eth1"},
-        {"spine1":"eth4","leaf4":"eth1"},
-        {"spine2":"eth1","leaf1":"eth2"},
-        {"spine2":"eth1","leaf2":"eth2"},
-        {"spine2":"eth1","leaf3":"eth2"},
-        {"spine2":"eth1","leaf4":"eth2"}
+        {"spine1":"fpPort1","leaf1":"fpPort1"},
+        {"spine1":"fpPort2","leaf2":"fpPort1"},
+        {"spine1":"fpPort3","leaf3":"fpPort1"},
+        {"spine1":"fpPort4","leaf4":"fpPort1"},
+        {"spine2":"fpPort1","leaf1":"fpPort2"},
+        {"spine2":"fpPort1","leaf2":"fpPort2"},
+        {"spine2":"fpPort1","leaf3":"fpPort2"},
+        {"spine2":"fpPort1","leaf4":"fpPort2"}
     ]
 }
 ```
@@ -167,14 +167,14 @@ EDT 2017-05-20 21:38:29  creating container spine2
 EDT 2017-05-20 21:38:30  creating container leaf1
 EDT 2017-05-20 21:38:31  creating container leaf3
 EDT 2017-05-20 21:38:31  creating container leaf2
-EDT 2017-05-20 21:38:32  creating connection  leaf4:eth1 - spine1:eth4
-EDT 2017-05-20 21:38:32  creating connection  leaf4:eth2 - spine2:eth4
-EDT 2017-05-20 21:38:33  creating connection  leaf1:eth1 - spine1:eth1
-EDT 2017-05-20 21:38:33  creating connection  leaf1:eth2 - spine2:eth1
-EDT 2017-05-20 21:38:33  creating connection  leaf3:eth1 - spine1:eth3
-EDT 2017-05-20 21:38:34  creating connection  leaf3:eth2 - spine2:eth3
-EDT 2017-05-20 21:38:34  creating connection  leaf2:eth1 - spine1:eth2
-EDT 2017-05-20 21:38:35  creating connection  leaf2:eth2 - spine2:eth2
+EDT 2017-05-20 21:38:32  creating connection  leaf4:fpPort1 - spine1:fpPort4
+EDT 2017-05-20 21:38:32  creating connection  leaf4:fpPort2 - spine2:fpPort4
+EDT 2017-05-20 21:38:33  creating connection  leaf1:fpPort1 - spine1:fpPort1
+EDT 2017-05-20 21:38:33  creating connection  leaf1:fpPort2 - spine2:fpPort1
+EDT 2017-05-20 21:38:33  creating connection  leaf3:fpPort1 - spine1:fpPort3
+EDT 2017-05-20 21:38:34  creating connection  leaf3:fpPort2 - spine2:fpPort3
+EDT 2017-05-20 21:38:34  creating connection  leaf2:fpPort1 - spine1:fpPort2
+EDT 2017-05-20 21:38:35  creating connection  leaf2:fpPort2 - spine2:fpPort2
 EDT 2017-05-20 21:38:35  waiting for flexswitch to start...
 EDT 2017-05-20 21:40:05  timeout expired, restarting flexswitch on spine1
 EDT 2017-05-20 21:40:06  timeout expired, restarting flexswitch on leaf4

@@ -8,7 +8,7 @@ docker_image = "snapos/flex:latest"
 netns_dir = "/var/run/netns/"
 lab_doc_reg = "^[ ]*(?P<id>[^:]+):(?P<name>[^\n]+)\n(?P<desc>.*)"
 device_name_reg = "^[a-zA-Z0-9\-\._]{2,64}$"
-link_name_reg = "^eth[0-9]{1,4}$"
+link_name_reg = "^(fpPort[0-9]{1,4})$"
 link_state_reg = "^[0-9]+:[ ]*(?P<intf>[^@:]+)(@[^:]+)?:"
 
 def get_args():

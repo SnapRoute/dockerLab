@@ -33,7 +33,8 @@ Reading state information... Done
 The following NEW packages will be installed:
   curl
 ...
-```    
+``` 
+
 
 ### Docker Privileges
 

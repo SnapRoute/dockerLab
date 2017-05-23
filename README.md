@@ -41,6 +41,8 @@ The following NEW packages will be installed:
 You may want to add users to the docker group so they can execute docker 
 commands without root access.  
 
+Add the desired user to the docker group, in this case the username is "user1":
+
 ```bash
 user1@ubuntu:~/$ sudo usermod -aG docker user1
 

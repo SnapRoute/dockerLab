@@ -375,6 +375,10 @@ def create_topology_connections(topo):
             except Exception as e:
                 logger.error("Error occurred: %s" % traceback.format_exc())
                 all_connections_success = False
+
+        # rename management interface to ma1 now that netns has been setup
+        rename_mgmt(pid1)
+
     return all_connections_success
 
 def connection_exists(pid1, pid2, link1, link2):
@@ -443,6 +447,18 @@ def clear_stale_connections():
         if not os.path.isfile("%s/%s" % (netns_dir, f)):
             logger.debug("removing stale softlink: %s/%s" % (netns_dir,f))
             os.remove("%s/%s" % (netns_dir, f))
+
+def rename_mgmt(pid1, s="eth0", d="ma1"):
+    """ rename default eth0 interface to ma1. Operation for docker mgmt
+        interface needs to be shut, rename, no-shut
+    """
+    cmds = []
+    cmds.append("ip netns exec %s ip link set %s down" % (pid1, s))
+    cmds.append("ip netns exec %s ip link set %s name %s" % (pid1,s, d))
+    cmds.append("ip netns exec %s ip link set %s up" % (pid1,d))
+    
+    # execute commands
+    for c in cmds: exec_cmd(c, ignore_exception=True)
 
 def cleanup(topo):
     """ cleanup topology by deleting containers and removing links """
@@ -721,7 +737,7 @@ if __name__ == "__main__":
         topo[device_name]["pid"] = pid
     
     # create topology connections 
-    if start_success: 
+    if start_success:
         start_success = create_topology_connections(topo)
 
     if start_success:

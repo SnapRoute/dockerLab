@@ -48,6 +48,13 @@ user1@ubuntu:~/$ sudo usermod -aG docker user1
 
 # Remember that you will have to log out and back in for this to take effect!
 ```
+You can validate the user is in the appropriate group using the "groups" command:
+
+```bash
+user1@ubuntu:~$ groups
+ubuntu adm cdrom sudo dip plugdev lpadmin sambashare docker
+```
+The above shows that "user1" is in the "docker" group.
 
 ## Manual Setup
 

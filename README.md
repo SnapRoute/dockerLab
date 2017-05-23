@@ -17,6 +17,25 @@ root@ubuntu:~/$ curl -sSL https://raw.githubusercontent.com/SnapRoute/dockerLab/
 
 ```
 
+If using a clean install - it may be necessary to install curl, if an error message like this is seen:
+
+```bash
+The program 'curl' is currently not installed. You can install it by typing:
+sudo apt install curl
+```
+To continue, follow the instructions from the target distro (apt, yum, etc.) to install curl:
+
+```bash
+ sudo apt install curl
+[sudo] password for ubuntu: 
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following NEW packages will be installed:
+  curl
+...
+```    
+
 ### Docker Privileges
 
 You may want to add users to the docker group so they can execute docker 

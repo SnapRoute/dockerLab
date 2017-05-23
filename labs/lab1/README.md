@@ -1,3 +1,5 @@
+# Lab1: Introduction to Flexswitch 
+
 - [Introduction ](#introduction)
 - [Getting Started ](#getting_started)
 - [Topology ](#topology)
@@ -9,8 +11,6 @@
 - [Stage 2 ](#stage_2)
 - [Stage 3 ](#stage_3)
 - [Stage 4 ](#stage_4)
-
-# Lab1: Introduction to Flexswitch 
 
 ## Introduction <a name="introduction"></a>
 This lab serves as an introduction to SnapRoute Flexswitch.  It uses a three 

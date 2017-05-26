@@ -377,7 +377,7 @@ def create_topology_connections(topo):
                 all_connections_success = False
 
         # rename management interface to ma1 now that netns has been setup
-        rename_mgmt(pid1)
+        # rename_mgmt(pid1)
 
     return all_connections_success
 

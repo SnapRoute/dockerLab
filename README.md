@@ -99,8 +99,9 @@ running SnapRoute Flexswitch.
 ```bash
 
 root@ubuntu:~/$ python dockerLab/labtool.py --help
-usage: labtool.py [-h] [--describe] [--lab LAB] [--stage STAGE] [--cleanup]
-                  [--repair] [--debug {debug,warn,info,error}]
+usage: labtool.py [-h] [--describe] [--lab LAB] [--stage STAGE]
+                  [--image IMAGE] [--upgrade UPGRADE [UPGRADE ...]]
+                  [--cleanup] [--repair] [--debug {debug,warn,info,error}]
 
 SnapRoute LabTool
 
@@ -118,6 +119,16 @@ optional arguments:
                         help completing and or wish to skip over stages. Note,
                         this operation will rebuild the entire container so
                         any custom configuration will be lost.
+  --image IMAGE         Flexswitch image to run on the container. Image can be
+                        the full path to .deb package or a url in which to
+                        download the image. By default, the flexswitch image
+                        bundled within the docker image will be deployed.
+  --upgrade UPGRADE [UPGRADE ...]
+                        Specify one or more container names to upgrade. To
+                        upgrade all containers within a specific lab, then use
+                        --upgrade "*" combined with --lab option. All
+                        containers will be upgraded to the flexswitch image
+                        provided by the --image option
   --cleanup             clean/delete all containers referenced within lab
                         topology
   --repair              This script builds linux vEth interfaces and assigns

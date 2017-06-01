@@ -15,8 +15,8 @@ The first step is to create a folder under dockerLabs/labs/ directory.
 We'll use the name 'myClosNetwork'.
 
 ```bash
-agossett@docker-dev:~$ cd dockerLab/labs
-agossett@docker-dev:~/dockerLab/labs$ mkdir myClosNetwork
+user1@ubuntu:~$ cd dockerLab/labs
+user1@ubuntu:~/dockerLab/labs$ mkdir myClosNetwork
 ```
 
 Second, we'll need to create an **\_\_init\_\_.py** with a docstring that 
@@ -27,14 +27,14 @@ The first line of the docstring must be in the format of
 
 ```bash
 # Ensure you are in the myClosNetwork directory
-agossett@docker-dev:~/dockerLab/labs/myClosNetwork$ 
+user1@ubuntu:~/dockerLab/labs/myClosNetwork$ 
 
-agossett@docker-dev:~/dockerLab/labs/myClosNetwork$ echo '"""
+user1@ubuntu:~/dockerLab/labs/myClosNetwork$ echo '"""
 > myClosNetwork: my custom lab
 > Check out this description of my custom lab!
 > """' > __init__.py
 
-agossett@docker-dev:~/dockerLab/labs/myClosNetwork$ cat __init__.py
+user1@ubuntu:~/dockerLab/labs/myClosNetwork$ cat __init__.py
 """
 myClosNetwork: my custom lab
 Check out this description of my custom lab!
@@ -67,7 +67,7 @@ to port defined in the topology file.  Our lab will use the following mappings:
 Create the **topology.json** file and copy it to the myClosNetwork directory
 
 ```bash
-agossett@docker-dev:~/dockerLab/labs/myClosNetwork$ cat topology.json
+user1@ubuntu:~/dockerLab/labs/myClosNetwork$ cat topology.json
 {
     "devices":[
         {"name":"leaf1", "port":"8001"},
@@ -108,7 +108,7 @@ all devices.  Note, the commands are executed from outside the container
 so the http port number in the curl command is unique to each device.
 
 ```bash
-agossett@docker-dev:~/dockerLab/labs/myClosNetwork$ cat stage1.sh
+user1@ubuntu:~/dockerLab/labs/myClosNetwork$ cat stage1.sh
 #!/bin/bash
 # stage scripts execute command outside of container instance on custom port
 
@@ -137,7 +137,7 @@ At this point, **labtool** will detect the custom topology and corresponding sta
 
 ```
 
-agossett@docker-dev:~/dockerLab$ sudo ./labtool.py --describe
+user1@ubuntu:~/dockerLab$ sudo ./labtool.py --describe
 
 The following 2 labs are available:
 
@@ -159,7 +159,7 @@ Create custom topology and staging files to emulate your network. See the
 documentation under the custom lab for more details
 
 # Run our custom topology!
-agossett@docker-dev:~/dockerLab$ sudo ./labtool.py --lab myclosnetwork --stage 1
+user1@ubuntu:~/dockerLab$ sudo ./labtool.py --lab myclosnetwork --stage 1
 EDT 2017-05-20 21:38:28  checking docker state
 EDT 2017-05-20 21:38:28  creating container spine1
 EDT 2017-05-20 21:38:29  creating container leaf4

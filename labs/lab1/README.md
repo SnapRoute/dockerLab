@@ -28,7 +28,7 @@ This lab will be implemented in the following stages:
 **labtool** can initialize the setup in any stage using the --stage option. For example, to complete the full configuration you can initialize the lab in the finally stage:
 
 ```bash
-agossett@docker-dev:~/dockerLab$ sudo python ./labtool.py --lab lab1 --stage 4
+user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1 --stage 4
 ```
 
 ## Getting Started <a name="getting_started"></a>
@@ -37,7 +37,7 @@ To start the lab, enter into the dockerLab folder created during [docker lab ins
 
 ```bash
 
-agossett@docker-dev:~/dockerLab$ sudo python ./labtool.py --lab lab1
+user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1
 
 ```
 
@@ -98,14 +98,14 @@ Access the SystemParam object from outside or inside the container
 
 ```
 # verify containers are running
-agossett@docker-dev:~/snaproute$ docker ps
+user1@ubuntu:~/snaproute$ docker ps
 CONTAINER ID        IMAGE                COMMAND                  CREATED             STATUS              PORTS                    NAMES
 7cc4268723c4        snapos/flex:latest   "/bin/sh -c 'sh /u..."   32 minutes ago      Up 32 minutes       0.0.0.0:8003->8080/tcp   leaf3
 945d36d0d0b7        snapos/flex:latest   "/bin/sh -c 'sh /u..."   32 minutes ago      Up 32 minutes       0.0.0.0:8002->8080/tcp   leaf2
 dffca4de7932        snapos/flex:latest   "/bin/sh -c 'sh /u..."   32 minutes ago      Up 32 minutes       0.0.0.0:8001->8080/tcp   leaf1
 
 # read the SystemParam from outside of the container
-agossett@docker-dev:~/snaproute$ curl -s 'http://localhost:8001/public/v1/config/SystemParam' | python -m json.tool
+user1@ubuntu:~/snaproute$ curl -s 'http://localhost:8001/public/v1/config/SystemParam' | python -m json.tool
 {
     "Object": {
         "Description": "FlexSwitch System",
@@ -119,7 +119,7 @@ agossett@docker-dev:~/snaproute$ curl -s 'http://localhost:8001/public/v1/config
 }
 
 # access bash shell of container 'leaf1' and read the SystemParam object
-agossett@docker-dev:~/snaproute$ docker exec -it leaf1 bash
+user1@ubuntu:~/snaproute$ docker exec -it leaf1 bash
 root@leaf1:/#
 root@leaf1:/# curl -s 'http://localhost:8080/public/v1/config/SystemParam' | python -m json.tool
 {
@@ -143,7 +143,7 @@ the API and the CLI. You can access the CLI via the following steps:
 
 ```
 # first access the bash shell of the leaf
-agossett@docker-dev:~/snaproute$ docker exec -it leaf1 bash
+user1@ubuntu:~/snaproute$ docker exec -it leaf1 bash
 root@leaf1:/#
 
 # cd to the correct directory

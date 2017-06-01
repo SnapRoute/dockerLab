@@ -589,7 +589,7 @@ def get_labs():
             lab_id = re.sub(" ","_", r1.group("id").lower().strip())
             all_labs[lab_id] = {
                 "id": lab_id,
-                "name": r1.group("name"),
+                "name": r1.group("name").strip(),
                 "description": r1.group("desc"),
                 "path": l.__path__[0],
                 "stage_max": stage_max

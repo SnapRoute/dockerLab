@@ -75,6 +75,12 @@ do_install() {
         $sh_c "$repo_c python"
     fi
 
+    # verify wget is installed (required for url upgrade)
+    if ! command_exists wget; then
+        echo -e "\n\n***** INSTALLING wget *****\n\n"
+        $sh_c "$repo_c wget"
+    fi
+
     # install docker
     echo -e "\n\n***** INSTALLING DOCKER *****\n\n"
     $curl https://get.docker.com/ | sh

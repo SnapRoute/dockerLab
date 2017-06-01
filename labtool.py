@@ -1,9 +1,11 @@
 #!/usr/bin/python
 import logging, logging.handlers, json, re, time
 import subprocess, os, signal, sys, traceback, argparse
+import threading
 logger = logging.getLogger(__name__)
 
 MAX_DEVICE_COUNT = 32
+MAX_THREADS = 16
 docker_image = "snapos/flex:latest"
 netns_dir = "/var/run/netns/"
 fs_image_dir = "./images/"
@@ -97,7 +99,7 @@ def setup_logger(logger, args, quiet=False):
 
     logger_handler = logging.StreamHandler(sys.stdout)
     if args.debug=="debug":
-        fmt = "%(process)d||%(asctime)s.%(msecs).03d||%(levelname)s||"
+        fmt = "%(process)d:%(threadName)s||%(asctime)s.%(msecs).03d||%(levelname)s||"
         fmt+= "%(filename)s:(%(lineno)d)||%(message)s"
     else:
         fmt = "%(asctime)s  %(message)s"
@@ -118,6 +120,8 @@ def exec_cmd(cmd, ignore_exception=False):
         out = subprocess.check_output(cmd,shell=True,stderr=subprocess.STDOUT)
         return out
     except subprocess.CalledProcessError as e:
+        # exit code -2 seen on ctrl+c interrupt
+        if e.returncode < 0: sys.exit("\nExiting...\n")
         if ignore_exception: 
             logger.debug("error executing cmd: %s" % e)
             logger.debug("stderr: %s" % e.output)
@@ -311,7 +315,7 @@ def remove_flexswitch_container(device_name, device_pid=None, force=False):
             cmd = "rm %s/%s" % (netns_dir, device_pid)
             exec_cmd(cmd, ignore_exception=True)
         cmd = "docker rm -f %s" % device_name
-        exec_cmd(cmd)
+        exec_cmd(cmd, ignore_exception=True)
 
 def get_container_pid(device_name):
     """ based on container name, return corresponding docker pid """
@@ -325,8 +329,9 @@ def get_container_pid(device_name):
     return pid.strip()
 
 def create_flexswitch_container(device_name, device_port, fs_image=None):
-    """ create flexswitch container with provided device_name and return
-        PID of successfully created container.  Return none on error
+    """ create flexswitch container with provided device_name. Calling
+        function must call get_container_pid to reliably determine if 
+        container was successfully started.
         Note, this function will first remove container if it currently exists
     """
     # remove container if currently exists
@@ -344,7 +349,7 @@ def create_flexswitch_container(device_name, device_port, fs_image=None):
         logger.error("failed to create docker container: %s, %s" % (
             device_name, device_port))
         return None
-    return get_container_pid(device_name)
+    return
 
 def upgrade_flexswitch_container(device_name, fs_image):
     """ upgrade flexswitch image to provided fs_image using dpkg -i command
@@ -377,18 +382,21 @@ def upgrade_flexswitch_container(device_name, fs_image):
         flex_image_mounted = True
 
     cmds = []
-    cmds.append("docker cp %s %s:/" % (fs_image,device_name))
+    cmds.append("docker cp %s %s:/%s" % (fs_image,device_name, img_name))
     cmds.append("docker exec -it %s dpkg -i /%s" % (device_name, img_name))
     if not flex_image_mounted:  
         cmds.append("docker exec -it %s mv /%s %s" % (
-            device_name, fs_image, gen_flex_path))
+            device_name, img_name, gen_flex_path))
     else: 
         imsg = "mounted directory already exists at %s. " % gen_flex_path
-        imsg+= "Upgrade will not be persistent across container restart."
+        imsg+= "Upgrade will not be persistent across '%s' restart." % (
+            device_name)
         logger.info(imsg)
     for c in cmds:
         out = exec_cmd(c, ignore_exception=True)
         if out is None:
+            # only 'fail' if dpkg returned error, other errors are ok
+            if not re.search(" dpkg -i ", c): continue
             logger.error("failed to upgrade %s" % device_name)
             return False
     return True
@@ -534,11 +542,14 @@ def rename_mgmt(pid1, s="eth0", d="ma1"):
 
 def cleanup(topo):
     """ cleanup topology by deleting containers and removing links """
+   
+    threads = []
+    for device_name in sorted(topo.keys()):
+        t = threading.Thread(target=remove_flexswitch_container,
+                args=(device_name, topo[device_name]["pid"], True))
+        threads.append(t)
+    execute_threads(threads)
 
-    for device_name in topo:
-        try: remove_flexswitch_container(device_name, 
-                device_pid=topo[device_name]["pid"], force=True)
-        except Exception as e: pass
     try: clear_stale_connections()
     except Exception as e: pass
 
@@ -748,159 +759,194 @@ def prompt_for_container_delete(topo):
                 else:
                     print "Please type 'yes' or 'no'"
                     confirm = None
-        except KeyboardInterrupt as e: sys.exit("\n")
+        except KeyboardInterrupt as e: sys.exit("\nExiting...\n")
         if not confirm:
             msg = "\nCannot continue while current containers exists.\n"
             msg+= "Please manually delete appropriate containers and then "
             msg+= "rerun this script\n"
             sys.exit(msg)
 
+def execute_threads(threads):
+    """ receive list of threading.Thread objects that have not yet been 
+        started. Start each thread and Ensure that only MAX_THREADS are 
+        running at a time. Ensure all threads complete
+    """
+    batch_count = 0
+    logger.debug("execute %s threads batch-size:%s"%(len(threads),MAX_THREADS))
+    while len(threads)>0:
+        batch_count+=1
+        active_threads = []
+        while len(threads)>0 and len(active_threads) < MAX_THREADS:
+            active_threads.append(threads.pop())
+        # start batch of threads
+        logger.debug("starting batch:%s" % batch_count)
+        for t in active_threads:
+            t.setDaemon(True)
+            t.start()
+            time.sleep(0.1)
+        # wait until all threads end
+        for t in active_threads: t.join()
+        logger.debug("completed batch:%s (%s remaining)" % (batch_count, 
+            len(threads)))
+
 if __name__ == "__main__":
- 
-    # ensure script working directory is local directory
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
-    # verify we're running on Linux box
-    out = exec_cmd("uname", ignore_exception=True)
-    if out is None or "linux" not in out.lower():
-        rmsg = "The underlying operating system is not Linux. "
-        rmsg+= "Docker with flexswitch is not supported"
-        sys.exit(rmsg)
-
-    # get user arguments, setup logging, and get list of available labs
-    args = get_args()
-    setup_logger(logger, args)
-    all_labs = get_labs()
-
-    # handle describe options first
-    if args.describe:
-        # handle describe for single lab
-        if args.lab is not None and args.lab.lower() in all_labs:
-            print describe_lab(all_labs[args.lab.lower()])
-        else:
-            print "\nThe following %s labs are available:\n" % len(all_labs)
-            for l in sorted(all_labs.keys()):
-                print describe_lab(all_labs[l])
-        sys.exit()
-        
-    # verify user is running as root before preceeding further 
-    if os.geteuid() != 0:
-        rmsg = "Sorry, you must be root. "
-        rmsg+= "Use 'sudo python %s' to execute this script." % __file__
-        sys.exit(rmsg)
- 
-    # check that docker is running
-    if not check_docker_running():
-        emsg = "Cannot connect to Docker daemon.  Is it running?\n"
-        emsg+= "Try 'sudo service docker start' to enable the service"
-        sys.exit(emsg)
-
-    # verify flexswitch image is valid if provided
-    if args.image is not None:
-        args.image = check_flexswitch_image(args.image)
-        if args.image is None: 
-            logger.error("flexswitch image validation failed")
-            sys.exit(1)
-
-    # handle upgrade option if requested
-    upgrade_all = False
-    if len(args.upgrade)>0:
-        if args.image is None:
-            emsg = "--image option required with --upgrade. "
-            emsg+= "Use --help for more info"
-            logger.error(emsg)
-            sys.exit(1)
-        if len(args.upgrade)==1 and args.upgrade[0]=="*":
-            upgrade_all = True
-        else:
-            for device_name in args.upgrade:
-                ret = upgrade_flexswitch_container(device_name, args.image)
-                if ret is None:
-                    logger.error("failed to upgrade %s" % device_name)
-                    # continue with upgrade of other devices
-            sys.exit(1)
-
-    # all other operations required a --lab attribute. Ensure it's present.
-    if args.lab is None:
-        sys.exit("A lab name is required. Use --help for more information")
-    if args.lab.lower() not in all_labs:
-        emsg = "Lab '%s' not found.  Use --describe to view " % args.lab.lower()
-        emsg+= "currently available labs"
-        sys.exit(emsg)
-
-    # user selected lab
-    current_lab = all_labs[args.lab.lower()]
-
-    # check provided stage before doing any other work
-    if args.stage > 0 and args.stage > current_lab["stage_max"]:
-        emsg = "Stage %s is invalid for lab this lab (max:%s)" % (
-                    args.stage, current_lab["stage_max"])
-        emsg+= "Use --describe for lab details"
-        sys.exit(emsg)
-
-    # build/validate topology file from provided lab
-    topo = get_topology("%s/topology.json" % current_lab["path"])
-    if topo is None:
-        logger.error("failed to parse device topology")
-        sys.exit(1)
-
-    # handle upgrade of all devices in lab
-    if upgrade_all:
-        for device_name in topo:
-            ret = upgrade_flexswitch_container(device_name, args.image)
-            if ret is None:
-                logger.error("failed to upgrade %s" % device_name)
-                # continue with upgrade of other devices
-        sys.exit(1)
-
-    # perform cleanup option if requested
-    if args.cleanup:
-        logger.info("cleaning up existing containers")
-        cleanup(topo)
-        sys.exit()
-
-    # repair broken connections if requested
-    if args.repair:
-        logger.info("repairing connections for running containers")
-        repair_connections(topo)
-        sys.exit()
-
-    # prepare for creating new containers...
-    # if script is executed without a stage option, then notify user of
-    # any containers that will be automatically deleted 
-    if args.stage == 0:
-        prompt_for_container_delete(topo)
-
-    # check if flexswitch is present, if not perform docker pull
-    try: check_docker_image() 
-    except Exception as e:
-        logger.error("Failed to verify/pull docker image: %s" % e)
-        sys.exit(1) 
-
-    # create containers and map pid to each device in topology
-    start_success = True
-    for device_name in topo:
-        pid = None
-        try: pid = create_flexswitch_container(device_name, 
-                topo[device_name]["port"], fs_image=args.image) 
-        except Exception as e:
-            logger.error("Error occurred: %s" % traceback.format_exc())
-        if pid is None:
-            start_success = False
-            break
-        topo[device_name]["pid"] = pid
+    try:
+        # ensure script working directory is local directory
+        os.chdir(os.path.dirname(os.path.realpath(__file__)))
     
-    # create topology connections 
-    if start_success:
-        start_success = create_topology_connections(topo)
+        # verify we're running on Linux box
+        out = exec_cmd("uname", ignore_exception=True)
+        if out is None or "linux" not in out.lower():
+            rmsg = "The underlying operating system is not Linux. "
+            rmsg+= "Docker with flexswitch is not supported"
+            sys.exit(rmsg)
+    
+        # get user arguments, setup logging, and get list of available labs
+        args = get_args()
+        setup_logger(logger, args)
+        all_labs = get_labs()
+    
+        # handle describe options first
+        if args.describe:
+            # handle describe for single lab
+            if args.lab is not None and args.lab.lower() in all_labs:
+                print describe_lab(all_labs[args.lab.lower()])
+            else:
+                print "\nThe following %s labs are available:\n" % len(all_labs)
+                for l in sorted(all_labs.keys()):
+                    print describe_lab(all_labs[l])
+            sys.exit()
+    
+        # verify user is running as root before preceeding further
+        if os.geteuid() != 0:
+            rmsg = "Sorry, you must be root. "
+            rmsg+= "Use 'sudo python %s' to execute this script." % __file__
+            sys.exit(rmsg)
+    
+        # check that docker is running
+        if not check_docker_running():
+            emsg = "Cannot connect to Docker daemon.  Is it running?\n"
+            emsg+= "Try 'sudo service docker start' to enable the service"
+            sys.exit(emsg)
+    
+        # verify flexswitch image is valid if provided
+        if args.image is not None:
+            args.image = check_flexswitch_image(args.image)
+            if args.image is None:
+                logger.error("flexswitch image validation failed")
+                sys.exit(1)
+    
+        # handle upgrade option if requested
+        upgrade_all = False
+        if len(args.upgrade)>0:
+            if args.image is None:
+                emsg = "--image option required with --upgrade. "
+                emsg+= "Use --help for more info"
+                logger.error(emsg)
+                sys.exit(1)
+            if len(args.upgrade)==1 and args.upgrade[0]=="*":
+                upgrade_all = True
+            else:
+                threads = []
+                for device_name in args.upgrade:
+                    t = threading.Thread(target=upgrade_flexswitch_container,
+                        args=(device_name, args.image,))
+                    threads.append(t)
+                execute_threads(threads)
+                #logger.info("completed upgrade of all selected device(s)")
+                sys.exit()
+    
+        # all other operations required a --lab attribute. Ensure it's present.
+        if args.lab is None:
+            sys.exit("A lab name is required. Use --help for more information")
+        if args.lab.lower() not in all_labs:
+            emsg = "Lab '%s' not found. " % args.lab.lower()
+            emsg+= "Use --describe to view currently available labs"
+            sys.exit(emsg)
+    
+        # user selected lab
+        current_lab = all_labs[args.lab.lower()]
+    
+        # check provided stage before doing any other work
+        if args.stage > 0 and args.stage > current_lab["stage_max"]:
+            emsg = "Stage %s is invalid for lab this lab (max:%s) " % (
+                        args.stage, current_lab["stage_max"])
+            emsg+= "Use --describe for lab details"
+            sys.exit(emsg)
+    
+        # build/validate topology file from provided lab
+        topo = get_topology("%s/topology.json" % current_lab["path"])
+        if topo is None:
+            logger.error("failed to parse device topology")
+            sys.exit(1)
+    
+        # handle upgrade of all devices in lab
+        if upgrade_all:
+            threads = []
+            for device_name in sorted(topo.keys()):
+                t = threading.Thread(target=upgrade_flexswitch_container,
+                    args=(device_name, args.image,))
+                threads.append(t)
+            execute_threads(threads)
+            #logger.info("completed upgrade of all devices")
+            sys.exit(1)
+    
+        # perform cleanup option if requested
+        if args.cleanup:
+            logger.info("cleaning up existing containers")
+            cleanup(topo)
+            sys.exit()
+    
+        # repair broken connections if requested
+        if args.repair:
+            logger.info("repairing connections for running containers")
+            repair_connections(topo)
+            sys.exit()
+    
+        # prepare for creating new containers...
+        # if script is executed without a stage option, then notify user of
+        # any containers that will be automatically deleted
+        if args.stage == 0:
+            prompt_for_container_delete(topo)
+    
+        # check if flexswitch is present, if not perform docker pull
+        try: check_docker_image()
+        except Exception as e:
+            logger.error("Failed to verify/pull docker image: %s" % e)
+            sys.exit(1)
+    
+        # create containers and map pid to each device in topology
+        start_success = True
+        threads = []
+        for device_name in sorted(topo.keys()):
+            t = threading.Thread(target=create_flexswitch_container,
+                args=(device_name, topo[device_name]["port"], args.image,))
+            threads.append(t)
+        execute_threads(threads)
 
-    if start_success:
-        # verify/wait for flexswitch to start on all containers
-        try: verify_flexswitch_running(topo)
-        except KeyboardInterrupt as e: sys.exit("\n")
-        # apply stage configs
-        if args.stage>0: execute_stages(current_lab["path"], args.stage)
-        logger.info("Successfully started '%s'" % current_lab["name"])
-    else:
-        logger.error("failed to build topology, cleaning up...")
-        cleanup(topo)
+        # gather pid for each device
+        for device_name in topo:
+            pid = get_container_pid(device_name)
+            if pid is None: 
+                logger.error("'%s' failed to start" % device_name)
+                start_success = False
+                break
+            topo[device_name]["pid"] = pid
+    
+        # create topology connections
+        if start_success:
+            start_success = create_topology_connections(topo)
+    
+        if start_success:
+            # verify/wait for flexswitch to start on all containers
+            verify_flexswitch_running(topo)
+            # apply stage configs
+            if args.stage>0: execute_stages(current_lab["path"], args.stage)
+            logger.info("Successfully started '%s'" % current_lab["name"])
+        else:
+            logger.error("failed to build topology, cleaning up...")
+            cleanup(topo)
+
+    except KeyboardInterrupt as e: 
+        sys.exit("\nExiting...\n")

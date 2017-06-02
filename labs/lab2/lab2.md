@@ -11,31 +11,31 @@ as shown below:
 ## Step 1: Create a Package Directory for your Lab
 
 The first step is to create a folder under dockerLabs/labs/ directory.  
-We'll use the name 'myClosNetwork'.
+We'll use the name 'lab2'.
 
 ```
 user1@ubuntu:~$ cd dockerLab/labs
-user1@ubuntu:~/dockerLab/labs$ mkdir myClosNetwork
+user1@ubuntu:~/dockerLab/labs$ mkdir lab2
 ```
 
 Second, we'll need to create an **\_\_init\_\_.py** with a docstring that 
-describes our lab. This allows the our myClosNetwork to appear as a 
+describes our lab. This allows the our lab2 to appear as a 
 discoverable package to  **labtool**.
 The first line of the docstring must be in the format of
 "id:Name" and a multiline description can follow after. For example:
 
-Ensure you are in the myClosNetwork directory:
+Ensure you are in the lab2 directory:
 ```
-user1@ubuntu:~/dockerLab/labs/myClosNetwork$ 
+user1@ubuntu:~/dockerLab/labs/lab2$ 
 
-user1@ubuntu:~/dockerLab/labs/myClosNetwork$ echo '"""
-> myClosNetwork: my custom lab
+user1@ubuntu:~/dockerLab/labs/lab2$ echo '"""
+> lab2: my custom lab
 > Check out this description of my custom lab!
 > """' > __init__.py
 
-user1@ubuntu:~/dockerLab/labs/myClosNetwork$ cat __init__.py
+user1@ubuntu:~/dockerLab/labs/lab2$ cat __init__.py
 """
-myClosNetwork: my custom lab
+lab2: my custom lab
 Check out this description of my custom lab!
 """
 ```
@@ -63,10 +63,10 @@ to port defined in the topology file.  Our lab will use the following mappings:
 | spine1   | 8080           | 8005      |
 | spine2   | 8080           | 8006      |
 
-Create the **topology.json** file and copy it to the myClosNetwork directory
+Create the **topology.json** file and copy it to the lab2 directory
 
 ```
-user1@ubuntu:~/dockerLab/labs/myClosNetwork$ cat topology.json
+user1@ubuntu:~/dockerLab/labs/lab2$ cat topology.json
 {
     "devices":[
         {"name":"leaf1", "port":"8001"},
@@ -107,7 +107,7 @@ all devices.  Note, the commands are executed from outside the container
 so the http port number in the curl command is unique to each device.
 
 ```
-user1@ubuntu:~/dockerLab/labs/myClosNetwork$ cat stage1.sh
+user1@ubuntu:~/dockerLab/labs/lab2$ cat stage1.sh
 #!/bin/bash
 
 # stage scripts execute command outside of container instance on custom port
@@ -150,7 +150,7 @@ node, full-mesh topology and walks the user through basic interface
 configuration and validation. eBGP is configured and loopback interfaces are
 redistributed along with route validation.
 ********************************************************************************
---lab myclosnetwork
+--lab lab2
   Name: An Example Custom Topology
   Stages: 1
   Description:
@@ -160,7 +160,7 @@ documentation under the custom lab for more details
 Run our custom topology:
 
 ```
-user1@ubuntu:~/dockerLab$ sudo ./labtool.py --lab myclosnetwork --stage 1
+user1@ubuntu:~/dockerLab$ sudo ./labtool.py --lab lab2 --stage 1
 EDT 2017-05-20 21:38:28  checking docker state
 EDT 2017-05-20 21:38:28  creating container spine1
 EDT 2017-05-20 21:38:29  creating container leaf4

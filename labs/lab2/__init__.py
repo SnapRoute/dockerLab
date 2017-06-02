@@ -1,5 +1,5 @@
 """
-myClosNetwork: An Example Custom Topology
+lab2: An Example Custom Topology
 Create custom topology and staging files to emulate your network. See the
-documentation under the myClosNetwork lab for more details
+documentation under the lab2 for more details
 """

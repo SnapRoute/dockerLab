@@ -68,12 +68,13 @@ Use apt-get, yum, or pkg to install
 * docker
 * python2.7
 * git
+* wget
 
 Finally, pull the public repository via git clone command.  For example:
 
 ```
 # install git and python
-root@ubuntu:~/$ apt-get update && apt-get install -y git python
+root@ubuntu:~/$ apt-get update && apt-get install -y git python wget
 
 # install docker via get.docker.com script
 root@ubuntu:~/$ curl -sSL https://get.docker.com/ | sh

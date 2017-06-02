@@ -12,6 +12,14 @@ command_exists() {
 
 do_install() {
 
+    # verify this is a linux machine
+    os="`uname`"
+    if [ "$os" != "Linux" ]; then
+        echo " The underlying Operating System is not Linux. "
+        echo " Docker with flexswitch is not supported."
+        exit 1
+    fi
+
     sh_c='sh -c'
     if [ "$user" != 'root' ]; then
         if command_exists sudo; then
@@ -21,7 +29,8 @@ do_install() {
         else
             >&2 echo "
             Error: this installer needs the ability to run commands as root.
-            We are unable to find either "sudo" or "su" available to make this happen.
+            We are unable to find either "sudo" or "su" available to make this 
+            happen.
             "
             exit 1
         fi
@@ -41,7 +50,10 @@ do_install() {
         repo_c='yum -y install'
     else
         >&2 echo "
-        Unable to find a package management utility (apt, dnf, yum)
+        Unable to find a package management utility (apt, dnf, yum).
+        This installer has only been tested on Debian, Centos, and Fedora.
+        Please try the manual installation method:
+            http://docs.snaproute.com/docker_labs/installing_docker/
         "
         exit 1
     fi

@@ -34,12 +34,7 @@ The following NEW packages will be installed:
 ``` 
 
 !!! note "Supported Linux Versions"
-    FlexSwitch for Docker is only supported for Docker on Linux.  It has been tested with these distros:
-    * Ubuntu 14.04
-    * Ubuntu 16.04
-    * CentOS 7
-    * Fedora 25
-    
+    FlexSwitch for Docker is only supported for Docker on Linux.  It has been tested with Ubuntu 14.04/16.04, CentOS 7, and Fedora 25.
 
 ### Docker Privileges
 
@@ -75,13 +70,12 @@ Use apt-get, yum, or pkg to install
 * docker
 * python2.7
 * git
-* wget
 
 Finally, pull the public repository via git clone command.  For example:
 
 ```
 # install git and python
-root@ubuntu:~/$ apt-get update && apt-get install -y git python wget
+root@ubuntu:~/$ apt-get update && apt-get install -y git python
 
 # install docker via get.docker.com script
 root@ubuntu:~/$ curl -sSL https://get.docker.com/ | sh

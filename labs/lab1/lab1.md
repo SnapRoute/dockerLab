@@ -20,7 +20,7 @@ user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1 --stage 4
 
 ## Getting Started
 
-To start the lab, enter into the dockerLab folder created during [docker lab install](https://github.com/SnapRoute/dockerLab/blob/master/README.md) and execute the **labtool.py** script with --lab argument **lab1**
+To start the lab, enter into the dockerLab folder created during [docker lab install](../../installing_docker.md) and execute the **labtool.py** script with --lab argument **lab1**
 
 ```
 user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1

@@ -29,7 +29,7 @@ user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1
 
 ## Topology
 
-![Lab 1 Diagram](img/lab1_diagram.png)
+![Lab 1 Diagram](lab1_diagram.png)
 
 ### IP Information
 

@@ -6,7 +6,7 @@ through a simple example to help you get started.
 For our custom topology, we'll use a CLOS network with 2 Spines and 4 Leaves 
 as shown below:
 
-![Lab 2 Diagram](img/lab2_diagram.png)
+![Lab 2 Diagram](lab2_diagram.png)
 
 ## Step 1: Create a Package Directory for your Lab
 

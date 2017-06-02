@@ -1,5 +1,4 @@
-
-## Introduction
+# Introduction
 
 Snaproute dockerLab allows you to quicky and easily deploy switches 
 running FlexSwitch within a virtual environment.
@@ -11,21 +10,20 @@ with testing custom topologies specific to your network!
 
 Setup your SnapRoute dockerLab environment with a single command:
 
-```bash
-
-root@ubuntu:~/$ curl -sSL https://raw.githubusercontent.com/SnapRoute/dockerLab/master/bash/install.sh | sh
+```
+root@ubuntu:~/$ curl -sSL http://getdocker.snaproute.com | sh
 
 ```
 
 If using a clean install - it may be necessary to install curl, if an error message like this is seen:
 
-```bash
+```
 The program 'curl' is currently not installed. You can install it by typing:
 sudo apt install curl
 ```
 To continue, follow the instructions from the target distro (apt, yum, etc.) to install curl:
 
-```bash
+```
 root@ubuntu:~/$ sudo apt install curl
 Reading package lists... Done
 Building dependency tree       
@@ -43,14 +41,16 @@ commands without root access.
 
 Add the desired user to the docker group, in this case the **username** is **user1**:
 
-```bash
-user1@ubuntu:~/$ sudo usermod -aG docker user1
-
-# Remember that you will have to log out and back in for this to take effect!
 ```
+user1@ubuntu:~/$ sudo usermod -aG docker user1
+```
+
+!!! note
+    Remember that you will have to log out and back in for this to take effect!
+
 You can validate the user is in the appropriate group using the **groups** command:
 
-```bash
+```
 user1@ubuntu:~$ groups
 ubuntu adm cdrom sudo dip plugdev lpadmin sambashare docker
 ```
@@ -71,7 +71,7 @@ Use apt-get, yum, or pkg to install
 
 Finally, pull the public repository via git clone command.  For example:
 
-```bash
+```
 # install git and python
 root@ubuntu:~/$ apt-get update && apt-get install -y git python
 
@@ -93,14 +93,14 @@ Once docker is installed, you can execute  **labtool.py** to spin up containers
 running SnapRoute Flexswitch.  
 
 ### Available Labs:
-* [Lab1: Introduction to Flexswitch](./labs/lab1/README.md)
-* [MyClosNetwork: Custom Networks](./labs/myClosNetwork/README.md)
+* [Lab 1 - Introduction to Flexswitch](./lab1.md)
+* [Lab 2 - Custom Topologies](./lab2.md)
 
-```bash
-
+```
 root@ubuntu:~/$ python dockerLab/labtool.py --help
-usage: labtool.py [-h] [--describe] [--lab LAB] [--stage STAGE] [--cleanup]
-                  [--repair] [--debug {debug,warn,info,error}]
+usage: labtool.py [-h] [--describe] [--lab LAB] [--stage STAGE]
+                  [--image IMAGE] [--upgrade UPGRADE [UPGRADE ...]]
+                  [--cleanup] [--repair] [--debug {debug,warn,info,error}]
 
 SnapRoute LabTool
 
@@ -118,6 +118,16 @@ optional arguments:
                         help completing and or wish to skip over stages. Note,
                         this operation will rebuild the entire container so
                         any custom configuration will be lost.
+  --image IMAGE         Flexswitch image to run on the container. Image can be
+                        the full path to .deb package or a url in which to
+                        download the image. By default, the flexswitch image
+                        bundled within the docker image will be deployed.
+  --upgrade UPGRADE [UPGRADE ...]
+                        Specify one or more container names to upgrade. To
+                        upgrade all containers within a specific lab, then use
+                        --upgrade "*" combined with --lab option. All
+                        containers will be upgraded to the flexswitch image
+                        provided by the --image option
   --cleanup             clean/delete all containers referenced within lab
                         topology
   --repair              This script builds linux vEth interfaces and assigns

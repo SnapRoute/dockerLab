@@ -1,4 +1,3 @@
-
 # Custom Topologies
 
 Create custom labs and topology to emulate your network. We'll walk
@@ -7,14 +6,14 @@ through a simple example to help you get started.
 For our custom topology, we'll use a CLOS network with 2 Spines and 4 Leaves 
 as shown below:
 
-![alt text](./lab_custom_topology.png)
+![Lab 2 Diagram](img/lab2_diagram.png)
 
 ## Step 1: Create a Package Directory for your Lab
 
 The first step is to create a folder under dockerLabs/labs/ directory.  
 We'll use the name 'myClosNetwork'.
 
-```bash
+```
 user1@ubuntu:~$ cd dockerLab/labs
 user1@ubuntu:~/dockerLab/labs$ mkdir myClosNetwork
 ```
@@ -25,8 +24,8 @@ discoverable package to  **labtool**.
 The first line of the docstring must be in the format of
 "id:Name" and a multiline description can follow after. For example:
 
-```bash
-# Ensure you are in the myClosNetwork directory
+Ensure you are in the myClosNetwork directory:
+```
 user1@ubuntu:~/dockerLab/labs/myClosNetwork$ 
 
 user1@ubuntu:~/dockerLab/labs/myClosNetwork$ echo '"""
@@ -66,7 +65,7 @@ to port defined in the topology file.  Our lab will use the following mappings:
 
 Create the **topology.json** file and copy it to the myClosNetwork directory
 
-```bash
+```
 user1@ubuntu:~/dockerLab/labs/myClosNetwork$ cat topology.json
 {
     "devices":[
@@ -107,9 +106,10 @@ For the example lab, we'll create a stage1.sh file that enables LLDP on
 all devices.  Note, the commands are executed from outside the container
 so the http port number in the curl command is unique to each device.
 
-```bash
+```
 user1@ubuntu:~/dockerLab/labs/myClosNetwork$ cat stage1.sh
 #!/bin/bash
+
 # stage scripts execute command outside of container instance on custom port
 
 # enable LLDP on leaf1
@@ -136,7 +136,6 @@ curl -sX PATCH -d '{"Enable":true}' 'http://localhost:8006/public/v1/config/LLDP
 At this point, **labtool** will detect the custom topology and corresponding stages.
 
 ```
-
 user1@ubuntu:~/dockerLab$ sudo ./labtool.py --describe
 
 The following 2 labs are available:
@@ -157,8 +156,10 @@ redistributed along with route validation.
   Description:
 Create custom topology and staging files to emulate your network. See the
 documentation under the custom lab for more details
+```
+Run our custom topology:
 
-# Run our custom topology!
+```
 user1@ubuntu:~/dockerLab$ sudo ./labtool.py --lab myclosnetwork --stage 1
 EDT 2017-05-20 21:38:28  checking docker state
 EDT 2017-05-20 21:38:28  creating container spine1

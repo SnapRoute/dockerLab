@@ -1,51 +1,37 @@
-# Lab1: Introduction to Flexswitch 
+# Lab 1 - Introduction to FlexSwitch 
 
-- [Introduction ](#introduction)
-- [Getting Started ](#getting_started)
-- [Topology ](#topology)
-- [API ](#api)
-	- [Introduction to the API ](#introduction_to_the_api)
-	- [Accessing the API ](#accessing_the_api)
-	- [Accessing the CLI ](#accessing_the_cli)
-- [Stage 1 ](#stage_1)
-- [Stage 2 ](#stage_2)
-- [Stage 3 ](#stage_3)
-- [Stage 4 ](#stage_4)
-
-## Introduction <a name="introduction"></a>
-This lab serves as an introduction to SnapRoute Flexswitch.  It uses a three 
+This lab serves as an introduction to SnapRoute FlexSwitch.  It uses a three 
 node, full-mesh topology and walks the user through basic interface 
 configuration and validation. eBGP is configured and loopback interfaces are
 redistributed along with route validation.
 
-This lab will be implemented in the following stages:
+This lab is implemented in the following stages:
 
-* [Stage 1 ](#stage_1) Enable LLDP and verify L1 connectivity
-* [Stage 2 ](#stage_2) Configure IP address and verify L2/L3 connectivity
-* [Stage 3 ](#stage_3) Enable eBGP on directly connected interfaces and verify neighborship
-* [Stage 4 ](#stage_4) Redistribute connected interfaces and verify routes are present
+* [Stage 1](#stage-1) Enable LLDP and verify L1 connectivity
+* [Stage 2](#stage-2) Configure IP address and verify L2/L3 connectivity
+* [Stage 3](#stage-3) Enable eBGP on directly connected interfaces and verify neighborship
+* [Stage 4](#stage-4) Redistribute connected interfaces and verify routes are present
 
 **labtool** can initialize the setup in any stage using the --stage option. For example, to complete the full configuration you can initialize the lab in the finally stage:
 
-```bash
+```
 user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1 --stage 4
 ```
 
-## Getting Started <a name="getting_started"></a>
+## Getting Started
 
 To start the lab, enter into the dockerLab folder created during [docker lab install](https://github.com/SnapRoute/dockerLab/blob/master/README.md) and execute the **labtool.py** script with --lab argument **lab1**
 
-```bash
-
+```
 user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1
 
 ```
 
-## Topology <a name="topology"></a>
+## Topology
 
-![alt text](./lab1_diagram.png)
+![Lab 1 Diagram](img/lab1_diagram.png)
 
-### IP Information <a name="ip_information"></a>
+### IP Information
 
 | Device   | BGP ASN | Loopback1   | fpPort1     |  fpPort2    |
 | -------- |:--------|:-----------:|:-----------:| -----------:|
@@ -55,9 +41,9 @@ user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1
 
 
 
-## API <a name="api"></a>
+## API
 
-### Introduction to the API <a name="introduction_to_the_api"></a>
+### Introduction to the API
 
 FlexSwitch comes with a RestFul API that can be used for configuration, state 
 querying and troubleshooting of protocols and system daemons.
@@ -76,9 +62,9 @@ Further documentation on FlexSwitch API, Objects, and URLs is available on
 [opensnaproute.github.io/docs](https://opensnaproute.github.io/docs/apis.html)
 
 
-### Accessing the API <a name="accessing_the_api"></a>
+### Accessing the API
 
-The flexswitch API is exposed on port 8080 on each device. Since there are 
+The FlexSwitch API is exposed on port 8080 on each device. Since there are 
 multiple containers, each is assigned a custom local port that maps to 8080.
 You can execute curl commands from your localhost to the specific port below
 to access the API on each device, or connect to the shell and execute them
@@ -92,19 +78,21 @@ against port 8080 from the container's bash shell.
 | leaf2    | 8080           | 8002      |
 | leaf3    | 8080           | 8003      |
 
-**Example**
+####Example
 
 Access the SystemParam object from outside or inside the container
 
+Verify containers are running:
 ```
-# verify containers are running
 user1@ubuntu:~/snaproute$ docker ps
 CONTAINER ID        IMAGE                COMMAND                  CREATED             STATUS              PORTS                    NAMES
 7cc4268723c4        snapos/flex:latest   "/bin/sh -c 'sh /u..."   32 minutes ago      Up 32 minutes       0.0.0.0:8003->8080/tcp   leaf3
 945d36d0d0b7        snapos/flex:latest   "/bin/sh -c 'sh /u..."   32 minutes ago      Up 32 minutes       0.0.0.0:8002->8080/tcp   leaf2
 dffca4de7932        snapos/flex:latest   "/bin/sh -c 'sh /u..."   32 minutes ago      Up 32 minutes       0.0.0.0:8001->8080/tcp   leaf1
+```
+Read the SystemParam from outside of the container:
 
-# read the SystemParam from outside of the container
+```
 user1@ubuntu:~/snaproute$ curl -s 'http://localhost:8001/public/v1/config/SystemParam' | python -m json.tool
 {
     "Object": {
@@ -117,8 +105,11 @@ user1@ubuntu:~/snaproute$ curl -s 'http://localhost:8001/public/v1/config/System
     },
     "ObjectId": "1f73d977-164d-4ff8-7564-3e28e573af0f"
 }
+```
 
-# access bash shell of container 'leaf1' and read the SystemParam object
+Access bash shell of container 'leaf1' and read the SystemParam object:
+
+```
 user1@ubuntu:~/snaproute$ docker exec -it leaf1 bash
 root@leaf1:/#
 root@leaf1:/# curl -s 'http://localhost:8080/public/v1/config/SystemParam' | python -m json.tool
@@ -135,23 +126,30 @@ root@leaf1:/# curl -s 'http://localhost:8080/public/v1/config/SystemParam' | pyt
 }
 ```
 
-### Accessing the CLI <a name="accessing_the_cli"></a>
+### Accessing the CLI 
 
-In addition to the API, flexswitch offers a CLI for configuration and 
+In addition to the API, FlexSwitch offers a CLI for configuration and 
 verification. Throughout this lab, each step will be performed using both
 the API and the CLI. You can access the CLI via the following steps:
 
+
+First access the bash shell of the leaf:
+
 ```
-# first access the bash shell of the leaf
 user1@ubuntu:~/snaproute$ docker exec -it leaf1 bash
 root@leaf1:/#
+```
 
-# cd to the correct directory
-root@leaf1:/# cd /opt/flexswitch/apps/cli2/
-root@leaf1:/opt/flexswitch/apps/cli2#
+Change to the correct directory:
+```
+root@leaf1:/# cd /opt/FlexSwitch/apps/cli2/
+root@leaf1:/opt/FlexSwitch/apps/cli2#
+```
 
-# execute the SnapRoute CLI script
-root@leaf1:/opt/flexswitch/apps/cli2# python ./snap_cli.py
+Execute the SnapRoute CLI script:
+
+```
+root@leaf1:/opt/FlexSwitch/apps/cli2# python ./snap_cli.py
 WARNING: Failed to execute tcpdump. Check it is installed and in the PATH
 WARNING: No route found for IPv6 destination :: (no default route?)
 loading schema...
@@ -173,14 +171,16 @@ FlexSwitch Console Version 1.0.0.190, Connected to: leaf1 Version 1.0.1.22.0
 Using snap style cli
 
 leaf1>
-
-# Enter 'enable' to access the enable prompt
-leaf1>enable
-leaf1#
-
 ```
 
-## Stage 1 <a name="stage_1"></a>
+Enter 'enable' to access the enable prompt:
+
+```
+leaf1>enable
+leaf1#
+```
+
+## Stage 1
 
 To enable LLDP, send an update to the LLDPGlobal object with the attribute 
 'Enable' set to True.  
@@ -188,7 +188,7 @@ To enable LLDP, send an update to the LLDPGlobal object with the attribute
 Repeat on all leaves.  Finally, verify neighbors are seen by reading the
 LLDPIntf state object
 
-### API <a name="stage_1_api"></a>
+### API
 
 ```
 root@leaf1:/# curl -sX PATCH -d '{"Enable":true}' 'http://localhost:8080/public/v1/config/LLDPGlobal' | python -m json.tool
@@ -272,7 +272,7 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/LLDPIntfs' | python
 }
 
 ```
-### CLI <a name="stage_1_cli"></a>
+### CLI
 
 ```
 leaf1#config
@@ -330,7 +330,7 @@ Interface fpPort2
 
 ```
 
-## Stage 2 <a name="stage_2"></a>
+## Stage 2
 
 To enable the interface, send an update to Port object referencing fpPort1 and 
 AdminState set to Up. To configure the interface as L3, create an IPv4Intf with
@@ -346,7 +346,7 @@ Finally, verify the state by reading the IPv4Intf state object.
 Repeat the appropriate configuration for remaining leaves in the topology.
 Verify connectivty via ping.
 
-### API <a name="stage_2_api"></a>
+### API
 
 ```
 root@leaf1:~# curl -sX PATCH -d '{"IntfRef":"fpPort1", "AdminState":"UP"}' 'http://localhost:8080/public/v1/config/Port' | python -m json.tool
@@ -466,7 +466,7 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/IPv4Intfs' | python
 
 ```
 
-### CLI <a name="stage_2_cli"></a>
+### CLI
 
 ```
 leaf1#conf
@@ -500,7 +500,7 @@ Applying Show:
 
 ```
 
-## Stage 3 <a name="stage_3"></a>
+## Stage 3
 
 The first step is to update the BGPGlobal object setting the ASN and RouterID.
 Next, create a BGPv4Neighbor object specifying the Neighbor IP address,
@@ -509,7 +509,7 @@ PeerAS, and UpdateSource for both interfaces fpPort1 and fpPort2.
 Repeat on all leaves.  Verify that BGPGlobal state object has the correct
 attributes and that the neighbors are in established state.
 
-### API <a name="stage_3_api"></a>
+### API
 
 ```
 root@leaf1:/#  curl -sX PATCH -d '{"ASNum":"65001","RouterId":"10.0.0.1"}' 'http://localhost:8080/public/v1/config/BGPGlobal' | python -m json.tool
@@ -675,7 +675,7 @@ root@leaf1:~#  curl -s GET 'http://localhost:8080/public/v1/state/BGPv4Neighbors
 
 ```
 
-### CLI <a name="stage_3_cli"></a>
+### CLI
 
 ```
 
@@ -716,7 +716,7 @@ Applying Show:
 
 ```
 
-## Stage 4 <a name="stage_4"></a>
+## Stage 4
 
 Redistribution requires policies that can be used for granual matching of 
 routes to be redistributed from one routing protocol to another.  In this 
@@ -732,9 +732,9 @@ To perform the redistribution follow the below steps:
      PolicyDefinition
 
 Repeat this on all three leaves.  Then, verify that BGPv4Route state objects 
-and IPv4Route state objects are present
+and IPv4Route state objects are present.
 
-### API <a name="stage_4_api"></a>
+### API
 
 ```
 root@leaf1:/# curl -sX POST  -d '{"Name":"s1_permit","Action":"permit"}' 'http://localhost:8080/public/v1/config/PolicyStmt' | python -m json.tool
@@ -766,11 +766,11 @@ root@leaf1:/# curl -sX PATCH -d '{"Redistribution":[{"policy":"p1_match_all","So
     "ObjectId": "812405a0-dd6d-4504-46cd-8ae5ca1a3a57",
     "Result": "Success"
 }
+```
 
+BGPv4Route object has a large number of attributes.  For simplicity, only a subset of attributes are displayed below:
 
-# BGPv4Route object has a large number of attributes.  For simplicity, only a
-subset of attributes are displayed below
-
+```
 root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/BGPv4Routes'  | python -m json.tool | egrep "CIDRLen|Network|NextHop"
                 "CIDRLen": 32,
                 "Network": "10.0.0.3",
@@ -795,8 +795,10 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/BGPv4Routes'  | pyt
                 "Network": "10.1.2.0",
                         "NextHop": "10.1.1.2",
                         "NextHop": "10.1.3.2",
+```
+Similarly for IPv4Routes object, this example filters the displayed attributes
 
-# Similarly for IPv4Routes object, this example filters the displayed attributes
+```
 root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/IPv4Routes'  | python -m json.tool | egrep "Nw"
                 "DestinationNw": "10.1.1.0/30",
                 "DestinationNw": "10.0.0.3/32",
@@ -804,10 +806,9 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/IPv4Routes'  | pyth
                 "DestinationNw": "10.0.0.1/32",
                 "DestinationNw": "10.0.0.2/32",
                 "DestinationNw": "10.1.3.0/30",
-
 ```
 
-### CLI <a name="stage_4_cli"></a>
+### CLI
 
 ```
 leaf1(config)#route_policy_statement s1_permit

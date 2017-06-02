@@ -49,6 +49,11 @@ def get_args():
     All containers will be upgraded to the flexswitch image provided by the
     --image option
     """
+    doptHelp = """
+    There may be additionally docker arguments that need to be passed to all
+    containers.  The --dopt option is a string of additional options to be
+    applied to the container when it is created.
+    """
      
     parser = argparse.ArgumentParser(description=desc,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -67,6 +72,8 @@ def get_args():
         help="clean/delete all containers referenced within lab topology")
     parser.add_argument("--repair", action="store_true", dest="repair",
         help=repairHelp)
+    parser.add_argument("--dopt", action="store", dest="dopt", default=None,
+        help=doptHelp)
     parser.add_argument("--debug", action="store", dest="debug",
         default="info", choices=["debug","warn","info","error"])
 
@@ -328,7 +335,8 @@ def get_container_pid(device_name):
         return None
     return pid.strip()
 
-def create_flexswitch_container(device_name, device_port, fs_image=None):
+def create_flexswitch_container(device_name, device_port, fs_image=None,
+                                dopt=None):
     """ create flexswitch container with provided device_name. Calling
         function must call get_container_pid to reliably determine if 
         container was successfully started.
@@ -342,6 +350,7 @@ def create_flexswitch_container(device_name, device_port, fs_image=None):
     cmd = "docker run -dt --log-driver=syslog --privileged --cap-add ALL "
     if fs_image is not None:
         cmd+= "--volume %s:%s:ro " % (fs_image, gen_flex_path)
+    if dopt is not None: cmd+= "%s " % dopt
     cmd+= "--hostname=%s --name %s -p %s:8080 %s" % (
         device_name, device_name, device_port, docker_image)
     out = exec_cmd(cmd, ignore_exception=True)
@@ -921,7 +930,8 @@ if __name__ == "__main__":
         threads = []
         for device_name in sorted(topo.keys()):
             t = threading.Thread(target=create_flexswitch_container,
-                args=(device_name, topo[device_name]["port"], args.image,))
+                args=(device_name, topo[device_name]["port"], args.image,
+                args.dopt))
             threads.append(t)
         execute_threads(threads)
 

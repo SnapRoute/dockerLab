@@ -33,6 +33,13 @@ The following NEW packages will be installed:
 ...
 ``` 
 
+!!! note "Supported Linux Versions"
+    FlexSwitch for Docker is only supported for Docker on Linux.  It has been tested with these distros:
+    * Ubuntu 14.04
+    * Ubuntu 16.04
+    * CentOS 7
+    * Fedora 25
+    
 
 ### Docker Privileges
 

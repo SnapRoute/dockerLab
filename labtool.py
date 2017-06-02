@@ -651,7 +651,7 @@ def check_flexswitch_image(img=None):
         return None if invalid else returns full image path
     """
     if img is None: return None
-    img_reg = "^flexswitch_docker.+?\.deb$"
+    img_reg = "^flexswitch_docker[a-z0-9\_\-\.]+\.deb$"
     # download image first if url is provided
     if re.search("^http", img) is not None:
         img_name = img.split("/")[-1]
@@ -667,6 +667,15 @@ def check_flexswitch_image(img=None):
                 ignore_exception=True)
             if ret is None:
                 logger.error("failed to download image")
+                try:
+                    # wget -O creates file with zero size even on failed 
+                    # download, need to delete it to prevent picking it up as 
+                    # a cached copy
+                    if os.path.isfile("%s/%s" % (fs_image_dir, img_name)):
+                        logger.debug("deleting file: %s/%s" % (fs_image_dir, 
+                            img_name))
+                        os.remove("%s/%s" % (fs_image_dir, img_name))
+                except IOError as e: pass
                 return None
             # rename img to local file
             img = "%s/%s" % (fs_image_dir, img_name)
@@ -683,6 +692,12 @@ def check_flexswitch_image(img=None):
             logger.error("unable to access flexswitch image: %s" % img)
             return None
         else: img = "%s/%s" % (fs_image_dir, img_name)
+
+    # verify size is not zero (1MB)
+    if os.stat(img).st_size < 1024*1024*1:
+        logger.error("invalid flexswitch image: %s, size: %s bytes"%(img_name, 
+            os.stat(img).st_size))
+        return None
     
     # everything looks ok, return full path
     return os.path.abspath(img)

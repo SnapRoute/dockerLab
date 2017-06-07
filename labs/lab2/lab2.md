@@ -19,7 +19,7 @@ user1@ubuntu:~/dockerLab/labs$ mkdir lab2
 ```
 
 Second, we'll need to create an **\_\_init\_\_.py** with a docstring that 
-describes our lab. This allows the our lab2 to appear as a 
+describes our lab. This allows our lab2 to appear as a 
 discoverable package to  **labtool**.
 The first line of the docstring must be in the format of
 "id:Name" and a multiline description can follow after. For example:

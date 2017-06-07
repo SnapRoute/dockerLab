@@ -12,7 +12,7 @@ This lab is implemented in the following stages:
 * [Stage 3](#stage-3) Enable eBGP on directly connected interfaces and verify neighborship
 * [Stage 4](#stage-4) Redistribute connected interfaces and verify routes are present
 
-**labtool** can initialize the setup in any stage using the --stage option. For example, to complete the full configuration you can initialize the lab in the finally stage:
+**labtool** can initialize the setup in any stage using the --stage option. For example, to complete the full configuration you can initialize the lab in the final stage:
 
 ```
 user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1 --stage 4

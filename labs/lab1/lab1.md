@@ -12,17 +12,17 @@ This lab is implemented in the following stages:
 * [Stage 3](#stage-3) Enable eBGP on directly connected interfaces and verify neighborship
 * [Stage 4](#stage-4) Redistribute connected interfaces and verify routes are present
 
-**labtool** can initialize the setup in any stage using the --stage option. For example, to complete the full configuration you can initialize the lab in the final stage:
+**labtool** can initialize the setup in any stage using the _--stage_ option. For example, to complete the full configuration you can initialize the lab in the finally stage:
 
-```
+```bash
 user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1 --stage 4
 ```
 
 ## Getting Started
 
-To start the lab, enter into the dockerLab folder created during [docker lab install](../../installing_docker.md) and execute the **labtool.py** script with --lab argument **lab1**
+To start the lab, enter the dockerLab folder created during [docker lab install](../../installing_docker.md) procedure and execute the **labtool.py** script with _--lab_ argument **lab1** as shown below.
 
-```
+```bash
 user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1
 
 ```
@@ -46,9 +46,9 @@ user1@ubuntu:~/dockerLab$ sudo python ./labtool.py --lab lab1
 ### Introduction to the API
 
 FlexSwitch comes with a RestFul API that can be used for configuration, state 
-querying and troubleshooting of protocols and system daemons.
+querying, and troubleshooting of protocols and system daemons.
 
-The table below maps out standard REST operations to the corresponding HTTP 
+The table below maps standard REST operations to the corresponding HTTP 
 method.
 
 | Operation   | HTTP Method | 
@@ -66,9 +66,11 @@ Further documentation on FlexSwitch API, Objects, and URLs is available on
 
 The FlexSwitch API is exposed on port 8080 on each device. Since there are 
 multiple containers, each is assigned a custom local port that maps to 8080.
+
 You can execute curl commands from your localhost to the specific port below
 to access the API on each device, or connect to the shell and execute them
-against port 8080.  
+against port 8080. 
+ 
 For consistency, all commands in this lab are executed 
 against port 8080 from the container's bash shell.
 
@@ -83,7 +85,8 @@ against port 8080 from the container's bash shell.
 Access the SystemParam object from outside or inside the container
 
 Verify containers are running:
-```
+
+```bash
 user1@ubuntu:~/snaproute$ docker ps
 CONTAINER ID        IMAGE                COMMAND                  CREATED             STATUS              PORTS                    NAMES
 7cc4268723c4        snapos/flex:latest   "/bin/sh -c 'sh /u..."   32 minutes ago      Up 32 minutes       0.0.0.0:8003->8080/tcp   leaf3
@@ -92,7 +95,7 @@ dffca4de7932        snapos/flex:latest   "/bin/sh -c 'sh /u..."   32 minutes ago
 ```
 Read the SystemParam from outside of the container:
 
-```
+```bash
 user1@ubuntu:~/snaproute$ curl -s 'http://localhost:8001/public/v1/config/SystemParam' | python -m json.tool
 {
     "Object": {
@@ -107,9 +110,9 @@ user1@ubuntu:~/snaproute$ curl -s 'http://localhost:8001/public/v1/config/System
 }
 ```
 
-Access bash shell of container 'leaf1' and read the SystemParam object:
+Access bash shell of container _leaf1_ and read the SystemParam object:
 
-```
+```bash
 user1@ubuntu:~/snaproute$ docker exec -it leaf1 bash
 root@leaf1:/#
 root@leaf1:/# curl -s 'http://localhost:8080/public/v1/config/SystemParam' | python -m json.tool
@@ -128,69 +131,63 @@ root@leaf1:/# curl -s 'http://localhost:8080/public/v1/config/SystemParam' | pyt
 
 ### Accessing the CLI 
 
-In addition to the API, FlexSwitch offers a CLI for configuration and 
-verification. Throughout this lab, each step will be performed using both
-the API and the CLI. You can access the CLI via the following steps:
+In addition to the API, FlexSwitch offers a CLI for configuration and  verification. Throughout this lab, each step is performed using both the API and the CLI. You can access the CLI by following these steps:
 
 
-First access the bash shell of the leaf:
-
-```
+1. Access the bash shell of the leaf:
+```bash
 user1@ubuntu:~/snaproute$ docker exec -it leaf1 bash
 root@leaf1:/#
 ```
-
-Change to the correct directory:
-```
+ 
+1. Change to the correct directory:
+```bash
 root@leaf1:/# cd /opt/FlexSwitch/apps/cli2/
 root@leaf1:/opt/FlexSwitch/apps/cli2#
 ```
+1. Execute the SnapRoute CLI script: 
+ 
+	```bash
+	root@leaf1:/opt/FlexSwitch/apps/cli2# python ./snap_cli.py
+	WARNING: Failed to execute tcpdump. Check it is installed and in the PATH
+	WARNING: No route found for IPv6 destination :: (no default route?)
+	loading schema...
+	loading model...
+	 _______  __       __________   ___      _______.____    __    ____  __  .___________.  ______  __    __
+	|   ____||  |     |   ____\  \ /  /     /       |\   \  /  \  /   / |  | |           | /      ||  |  |  |
+	|  |__   |  |     |  |__   \  V  /     |   (----` \   \/    \/   /  |  | `---|  |----`|  ,----'|  |__|  |
+	|   __|  |  |     |   __|   >   <       \   \      \            /   |  |     |  |     |  |     |   __   |
+	|  |     |  `----.|  |____ /  .  \  .----)   |      \    /\    /    |  |     |  |     |  `----.|  |  |  |
+	|__|     |_______||_______/__/ \__\ |_______/        \__/  \__/     |__|     |__|      \______||__|  |__|
+	                                _______  __       __
+	                               /       ||  |     |  |
+	                              |   ,----||  |     |  |
+	                              |   |     |  |     |  |
+	                              |   `----.|  `----.|  |
+	                               \_______||_______||__|
+	
+	FlexSwitch Console Version 1.0.0.190, Connected to: leaf1 Version 1.0.1.22.0
+	Using snap style cli
+	
+	leaf1>
+	``` 
+  
+4. Enter 'enable' to access the enable prompt:
 
-Execute the SnapRoute CLI script:
-
-```
-root@leaf1:/opt/FlexSwitch/apps/cli2# python ./snap_cli.py
-WARNING: Failed to execute tcpdump. Check it is installed and in the PATH
-WARNING: No route found for IPv6 destination :: (no default route?)
-loading schema...
-loading model...
- _______  __       __________   ___      _______.____    __    ____  __  .___________.  ______  __    __
-|   ____||  |     |   ____\  \ /  /     /       |\   \  /  \  /   / |  | |           | /      ||  |  |  |
-|  |__   |  |     |  |__   \  V  /     |   (----` \   \/    \/   /  |  | `---|  |----`|  ,----'|  |__|  |
-|   __|  |  |     |   __|   >   <       \   \      \            /   |  |     |  |     |  |     |   __   |
-|  |     |  `----.|  |____ /  .  \  .----)   |      \    /\    /    |  |     |  |     |  `----.|  |  |  |
-|__|     |_______||_______/__/ \__\ |_______/        \__/  \__/     |__|     |__|      \______||__|  |__|
-                                _______  __       __
-                               /       ||  |     |  |
-                              |   ,----||  |     |  |
-                              |   |     |  |     |  |
-                              |   `----.|  `----.|  |
-                               \_______||_______||__|
-
-FlexSwitch Console Version 1.0.0.190, Connected to: leaf1 Version 1.0.1.22.0
-Using snap style cli
-
-leaf1>
-```
-
-Enter 'enable' to access the enable prompt:
-
-```
+```bash
 leaf1>enable
 leaf1#
 ```
 
 ## Stage 1
 
-To enable LLDP, send an update to the LLDPGlobal object with the attribute 
-'Enable' set to True.  
+To enable LLDP, send an update to the LLDPGlobal object with the _Enable_ attribute set to True.  
 
-Repeat on all leaves.  Finally, verify neighbors are seen by reading the
-LLDPIntf state object
+Repeat this on all leaves. Finally, verify that neighbors are seen by reading the LLDPIntf state object.
 
 ### API
 
-```
+```bash
 root@leaf1:/# curl -sX PATCH -d '{"Enable":true}' 'http://localhost:8080/public/v1/config/LLDPGlobal' | python -m json.tool
 {
     "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
@@ -274,7 +271,7 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/LLDPIntfs' | python
 ```
 ### CLI
 
-```
+```bash
 leaf1#config
 *** Configuration will only be applied once 'apply' command is entered ***
 leaf1(config)#lldp enable
@@ -332,12 +329,12 @@ Interface fpPort2
 
 ## Stage 2
 
-To enable the interface, send an update to Port object referencing fpPort1 and 
-AdminState set to Up. To configure the interface as L3, create an IPv4Intf with
-IP address referencing fpPort1.  Ensure that the AdminState of the IPv4Intf is UP.
+To enable the interface, send an update to the Port object referencing _fpPort1_ and set
+_AdminState_ to _UP_. To configure the interface as L3, create an _IPv4Intf_ with
+_IpAddr_ referencing _fpPort1_.  Ensure that the AdminState of the IPv4Intf is UP.
 Repeat for interface fpPort2.
 
-For loopback interfaces, send a create for LogicalIntf specifying the name of
+For loopback interfaces, send a create (POST) request for _LogicalIntf_ specifying the name of
 the loopback interface. Then, similar to the fpPort1, create an IPv4Intf object
 with the appropriate IP address referencing Loopback1.
 
@@ -348,7 +345,7 @@ Verify connectivty via ping.
 
 ### API
 
-```
+```bash
 root@leaf1:~# curl -sX PATCH -d '{"IntfRef":"fpPort1", "AdminState":"UP"}' 'http://localhost:8080/public/v1/config/Port' | python -m json.tool
 {
     "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
@@ -463,12 +460,11 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/IPv4Intfs' | python
     ]
 }
 
-
 ```
 
 ### CLI
 
-```
+```bash
 leaf1#conf
 
 *** Configuration will only be applied once 'apply' command is entered ***
@@ -506,7 +502,7 @@ The first step is to update the BGPGlobal object setting the ASN and RouterID.
 Next, create a BGPv4Neighbor object specifying the Neighbor IP address,
 PeerAS, and UpdateSource for both interfaces fpPort1 and fpPort2.
 
-Repeat on all leaves.  Verify that BGPGlobal state object has the correct
+Repeat on all leaves.  Verify that the _BGPGlobal_ state object has the correct
 attributes and that the neighbors are in established state.
 
 ### API
@@ -718,25 +714,26 @@ Applying Show:
 
 ## Stage 4
 
-Redistribution requires policies that can be used for granual matching of 
+Redistribution requires policies that can be used for granular matching of 
 routes to be redistributed from one routing protocol to another.  In this 
-example, we are redistributed connected routes into BGP.  We do not want to
+example, we are redistributed connected routes to BGP.  We do not want to
 filter any connected routes so we will create a policy that allows all routes.
 
-To perform the redistribution follow the below steps:
-  1. Create a PolicyStmt (Policy Statment) object with Action 'permit' and no
-     other conditions or setActions
+To perform the redistribution with the folowing steps:
+
+  1. Create a PolicyStmt (Policy Statment) object with Action _permit_ and no
+     other conditions or setActions.
   2. Create a PolicyDefintion object that references the previously created
-     Statement object with a priority of 0
+     Statement object with a priority of 0.
   3. Update the BGPGlobal Object to redistribute CONNECTED routes using the 
-     PolicyDefinition
+     PolicyDefinition.
 
 Repeat this on all three leaves.  Then, verify that BGPv4Route state objects 
 and IPv4Route state objects are present.
 
 ### API
 
-```
+```bash
 root@leaf1:/# curl -sX POST  -d '{"Name":"s1_permit","Action":"permit"}' 'http://localhost:8080/public/v1/config/PolicyStmt' | python -m json.tool
 {
     "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
@@ -768,9 +765,9 @@ root@leaf1:/# curl -sX PATCH -d '{"Redistribution":[{"policy":"p1_match_all","So
 }
 ```
 
-BGPv4Route object has a large number of attributes.  For simplicity, only a subset of attributes are displayed below:
+BGPv4Route object has a large number of attributes.  For simplicity, only a subset of attributes are displayed below.
 
-```
+```bash
 root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/BGPv4Routes'  | python -m json.tool | egrep "CIDRLen|Network|NextHop"
                 "CIDRLen": 32,
                 "Network": "10.0.0.3",
@@ -796,9 +793,9 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/BGPv4Routes'  | pyt
                         "NextHop": "10.1.1.2",
                         "NextHop": "10.1.3.2",
 ```
-Similarly for IPv4Routes object, this example filters the displayed attributes
+Similarly for IPv4Routes object, this example filters the displayed attributes.
 
-```
+```bash
 root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/IPv4Routes'  | python -m json.tool | egrep "Nw"
                 "DestinationNw": "10.1.1.0/30",
                 "DestinationNw": "10.0.0.3/32",
@@ -810,7 +807,7 @@ root@leaf1:~# curl -s 'http://localhost:8080/public/v1/state/IPv4Routes'  | pyth
 
 ### CLI
 
-```
+```bash
 leaf1(config)#route_policy_statement s1_permit
 leaf1(config-route-policy-statement)#action permit
 leaf1(config-route-policy-statement)#apply

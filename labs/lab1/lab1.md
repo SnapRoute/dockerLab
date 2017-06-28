@@ -142,13 +142,13 @@ root@leaf1:/#
  
 1. Change to the correct directory:
 ```bash
-root@leaf1:/# cd /opt/FlexSwitch/apps/cli2/
-root@leaf1:/opt/FlexSwitch/apps/cli2#
+root@leaf1:/# cd /opt/flexswitch/apps/cli2/
+root@leaf1:/opt/flexswitch/apps/cli2#
 ```
 1. Execute the SnapRoute CLI script: 
  
 	```bash
-	root@leaf1:/opt/FlexSwitch/apps/cli2# python ./snap_cli.py
+	root@leaf1:/opt/flexswitch/apps/cli2# python ./snap_cli.py
 	WARNING: Failed to execute tcpdump. Check it is installed and in the PATH
 	WARNING: No route found for IPv6 destination :: (no default route?)
 	loading schema...

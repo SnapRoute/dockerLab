@@ -1,0 +1,13 @@
+{
+    "devices":[
+        {"name":"services", "port":"8001", "dockerimage":"snaproute/dockerlab:services", "flexswitch":"NA"},
+        {"name":"switch1", "port":"8002"},
+        {"name":"switch2", "port":"8003"},
+        {"name":"switch3", "port":"8004"}
+    ],
+    "connections":[
+        {"services":"fpPort1","switch1":"fpPort1"},
+        {"switch1":"fpPort2","switch2":"fpPort2"},
+        {"switch1":"fpPort3","switch3":"fpPort3"}
+    ]
+}

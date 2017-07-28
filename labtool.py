@@ -191,7 +191,9 @@ def get_topology(topology_file = None):
             # everything ok, add to devices
             devices[d["name"].lower()] = {
                     "name": d["name"], "port": int(d["port"]),
-                    "connections": [], "interfaces":[], "pid":""
+                    "connections": [], "interfaces":[], "pid":"",
+                    "dockerimage":d.get("dockerimage", "snapos/flex:latest"),
+                    "flexswitch":d.get("flexswitch", "_image_default_")
             }
 
         # build connections
@@ -336,12 +338,13 @@ def get_container_pid(device_name):
     return pid.strip()
 
 def create_flexswitch_container(device_name, device_port, fs_image=None,
-                                dopt=None):
+                                dopt=None, dockerimage=None):
     """ create flexswitch container with provided device_name. Calling
         function must call get_container_pid to reliably determine if 
         container was successfully started.
         Note, this function will first remove container if it currently exists
     """
+    if dockerimage == None: dockerimage=docker_image
     # remove container if currently exists
     remove_flexswitch_container(device_name)
 
@@ -352,7 +355,7 @@ def create_flexswitch_container(device_name, device_port, fs_image=None,
         cmd+= "--volume %s:%s:ro " % (fs_image, gen_flex_path)
     if dopt is not None: cmd+= "%s " % dopt
     cmd+= "--hostname=%s --name %s -p %s:8080 %s" % (
-        device_name, device_name, device_port, docker_image)
+        device_name, device_name, device_port, dockerimage)
     out = exec_cmd(cmd, ignore_exception=True)
     if out is None:
         logger.error("failed to create docker container: %s, %s" % (
@@ -590,6 +593,8 @@ def verify_flexswitch_running(devices, timeout=90, uptime_threshold=10):
     logger.info("waiting for flexswitch to start...")
     device_state = {}
     for d in devices: 
+        if devices[d].get("flexswitch", "_image_default_").upper() == "NA":
+	    continue
         device_state[d] = {"name":d, "uptime":0, "ready":False,
             "port":devices[d]["port"]}
     start_ts = time.time()
@@ -946,7 +951,7 @@ if __name__ == "__main__":
         for device_name in sorted(topo.keys()):
             t = threading.Thread(target=create_flexswitch_container,
                 args=(device_name, topo[device_name]["port"], args.image,
-                args.dopt))
+                args.dopt, topo[device_name].get("dockerimage", docker_image)))
             threads.append(t)
         execute_threads(threads)
 

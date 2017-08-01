@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 MAX_DEVICE_COUNT = 32
 MAX_THREADS = 16
-docker_image = "snapos/flex:latest"
+docker_image = "snaproute/dockerlab:flexswitch" #"snapos/flex:latest"
 netns_dir = "/var/run/netns/"
 fs_image_dir = "./images/"
 gen_flex_path = "/usr/local/flex.deb"
@@ -181,6 +181,7 @@ def get_topology(topology_file = None):
                 return None
             try:
                 port = int(d["port"])
+                port_internal = int(d.get("port_internal", "8080"))
                 if port >= 0xffff or port < 0x400:
                     logger.error("invalid port %s, must be between %d and %d"%(
                         port, 0x400, 0xffff))
@@ -190,9 +191,10 @@ def get_topology(topology_file = None):
                 return None
             # everything ok, add to devices
             devices[d["name"].lower()] = {
-                    "name": d["name"], "port": int(d["port"]),
+                    "name": d["name"], "port": int(d["port"]), "port_internal": port_internal, "schema":d.get("schema","http"),
+                    "username":d.get("username", "admin"), "password":d.get("password", "snaproute"),
                     "connections": [], "interfaces":[], "pid":"",
-                    "dockerimage":d.get("dockerimage", "snapos/flex:latest"),
+                    "dockerimage":d.get("dockerimage", docker_image),
                     "flexswitch":d.get("flexswitch", "_image_default_")
             }
 
@@ -337,7 +339,7 @@ def get_container_pid(device_name):
         return None
     return pid.strip()
 
-def create_flexswitch_container(device_name, device_port, fs_image=None,
+def create_flexswitch_container(device_name, device_port, device_port_internal, fs_image=None,
                                 dopt=None, dockerimage=None):
     """ create flexswitch container with provided device_name. Calling
         function must call get_container_pid to reliably determine if 
@@ -349,13 +351,13 @@ def create_flexswitch_container(device_name, device_port, fs_image=None,
     remove_flexswitch_container(device_name)
 
     # kickoff requested container
-    logger.info("creating container %s" % device_name)
-    cmd = "docker run -dt --log-driver=syslog --privileged --cap-add ALL "
+    logger.info("creating container %s using %s" % (device_name, dockerimage))
+    cmd = "docker run -dt --privileged --cap-add ALL "
     if fs_image is not None:
         cmd+= "--volume %s:%s:ro " % (fs_image, gen_flex_path)
     if dopt is not None: cmd+= "%s " % dopt
-    cmd+= "--hostname=%s --name %s -p %s:8080 %s" % (
-        device_name, device_name, device_port, dockerimage)
+    cmd+= "--hostname=%s --name %s -p %s:%s %s" % (
+        device_name, device_name, device_port, device_port_internal, dockerimage)
     out = exec_cmd(cmd, ignore_exception=True)
     if out is None:
         logger.error("failed to create docker container: %s, %s" % (
@@ -602,8 +604,8 @@ def verify_flexswitch_running(devices, timeout=90, uptime_threshold=10):
         # loop through all devices and check if sysd is currently running
         waiting = False
         for d in device_state:
-            cmd ="curl -s 'http://localhost:%s/public/v1/state/SystemStatus'"%(
-                device_state[d]["port"])
+            cmd ="curl --insecure -u %s:%s -s '%s://localhost:%s/public/v1/state/SystemStatus'"%(
+                devices[d]["username"], devices[d]["password"], devices[d]["schema"], device_state[d]["port"])
             out = exec_cmd(cmd, ignore_exception=True)
             if out is not None:
                 try:
@@ -950,8 +952,8 @@ if __name__ == "__main__":
         threads = []
         for device_name in sorted(topo.keys()):
             t = threading.Thread(target=create_flexswitch_container,
-                args=(device_name, topo[device_name]["port"], args.image,
-                args.dopt, topo[device_name].get("dockerimage", docker_image)))
+                args=(device_name, topo[device_name]["port"], topo[device_name]["port_internal"],
+                      args.image,args.dopt, topo[device_name].get("dockerimage", docker_image)))
             threads.append(t)
         execute_threads(threads)
 

@@ -12,7 +12,7 @@ fs_image_dir = "./images/"
 gen_flex_path = "/usr/local/flex.deb"
 lab_doc_reg = "^[ ]*(?P<id>[^:]+):(?P<name>[^\n]+)\n(?P<desc>.*)"
 device_name_reg = "^[a-zA-Z0-9\-\._]{2,64}$"
-link_name_reg = "^(fpPort[0-9]{1,4})$"
+link_name_reg = "^(fpPort[0-9]{1,4})|ma1$"
 link_state_reg = "^[0-9]+:[ ]*(?P<intf>[^@:]+)(@[^:]+)?:"
 
 def get_args():
@@ -123,7 +123,7 @@ def setup_logger(logger, args, quiet=False):
 def exec_cmd(cmd, ignore_exception=False):
     """ execute command and return stdout output - None on error """
     try:
-        logger.debug("excecuting command: %s" % cmd)
+        logger.debug("executing command: %s" % cmd)
         out = subprocess.check_output(cmd,shell=True,stderr=subprocess.STDOUT)
         return out
     except subprocess.CalledProcessError as e:
@@ -567,6 +567,22 @@ def cleanup(topo):
     try: clear_stale_connections()
     except Exception as e: pass
 
+def generate_environment_variables(path):
+    """ create/update environment variables file for use by stage files
+    """
+    env_path = "%s/.generated/source.env" % path
+    logger.info("generating environment variables in %s " % env_path)
+    if not os.path.exists(os.path.dirname(env_path)):
+        os.makedirs(os.path.dirname(env_path))
+    try:
+        with open(env_path, "w") as f:
+            for device, attrs in sorted(topo.iteritems()):
+                for attr, value in sorted(attrs.iteritems()):
+                    if attr.upper() in ['PID','PORT','NAME','SCHEMA','USERNAME','PASSWORD']:
+                        f.write("%s_%s=%s\n" %(device.upper(), attr.upper(), value))
+    except IOError as e:
+        logger.error("failed to open %s: %s" % (env_path,e))
+
 def execute_stages(path, stage=0):
     """ execute commands within all stage scripts from 0 to provided stage.
         Ensure only 'safe' curl commands are executed
@@ -576,6 +592,8 @@ def execute_stages(path, stage=0):
         logger.info("applying stage %s configuration" % s)
         logger.debug("opening stage commands in %s" % fname)
         try:
+            logger.debug(exec_cmd("/bin/bash -c %s" % fname, ignore_exception=True))
+            '''
             with open(fname, "r") as f:
                 curl_commands = []
                 for cmd in f.readlines():
@@ -584,6 +602,7 @@ def execute_stages(path, stage=0):
                         logger.debug(exec_cmd(cmd, ignore_exception=True))
                     elif "curl" in cmd: 
                         logger.debug("skipping invalid cmd: %s" % cmd)
+            '''
         except IOError as e:
             logger.error("failed to open %s: %s" % (fname,e)) 
             continue
@@ -973,6 +992,7 @@ if __name__ == "__main__":
         if start_success:
             # verify/wait for flexswitch to start on all containers
             verify_flexswitch_running(topo)
+	    generate_environment_variables(current_lab["path"])
             # apply stage configs
             if args.stage>0: execute_stages(current_lab["path"], args.stage)
             logger.info("Successfully started '%s'" % current_lab["name"])

@@ -1,0 +1,2 @@
+auto fpPort1
+iface fpPort1 inet dhcp

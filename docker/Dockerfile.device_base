@@ -1,0 +1,19 @@
+FROM ubuntu:latest
+ADD context/* /local/
+WORKDIR /local/
+
+RUN apt-get -y update && \
+    apt-get -y install \
+        iputils-ping \
+        netbase \
+        net-tools \
+        tcpdump \
+        vim \
+    && \
+    apt-get clean all
+
+RUN cp -Rf /local/etc/* /etc
+
+ENTRYPOINT ["/local/docker_startup.sh"]
+CMD /bin/bash
+

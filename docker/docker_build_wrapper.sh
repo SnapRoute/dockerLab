@@ -20,7 +20,7 @@ rm -rf $BUILD_CONTEXT && mkdir -p $BUILD_CONTEXT/context && cp $DOCKERFILE $BUIL
 function cleanup {
   rm -rf $BUILD_CONTEXT
 }
-# trap cleanup EXIT
+trap cleanup EXIT
 
 for folder in "${TARGET_CONTEXT_DIRECTORIES[@]}"; do
     cp -R $folder $BUILD_CONTEXT/context

@@ -5,7 +5,13 @@
         {"name":"leaf3", "port":"8003"},
         {"name":"leaf4", "port":"8004"},
         {"name":"spine1", "port":"8005"},
-        {"name":"spine2", "port":"8006"}
+        {"name":"spine2", "port":"8006"},
+        {"name":"host1",  "port":"8007", "port_internal":"22",
+            "dockerimage":"ubuntu:16.04", "flexswitch":"NA"
+        },
+        {"name":"host2",  "port":"8008", "port_internal":"22",
+            "dockerimage":"ubuntu:16.04", "flexswitch":"NA"
+        }
     ],
     "connections":[
         {"spine1":"fpPort1","leaf1":"fpPort1"},
@@ -15,6 +21,8 @@
         {"spine2":"fpPort1","leaf1":"fpPort2"},
         {"spine2":"fpPort2","leaf2":"fpPort2"},
         {"spine2":"fpPort3","leaf3":"fpPort2"},
-        {"spine2":"fpPort4","leaf4":"fpPort2"}
+        {"spine2":"fpPort4","leaf4":"fpPort2"},
+        {"leaf1" :"fpPort3", "host1":"eth1"},
+        {"leaf4" :"fpPort3", "host2":"eth1"}
     ]
 }

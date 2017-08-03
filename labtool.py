@@ -7,12 +7,13 @@ logger = logging.getLogger(__name__)
 MAX_DEVICE_COUNT = 32
 MAX_THREADS = 16
 docker_image = "snapos/flex:latest"
+flexswitch_timeout = 180
 netns_dir = "/var/run/netns/"
 fs_image_dir = "./images/"
 gen_flex_path = "/usr/local/flex.deb"
 lab_doc_reg = "^[ ]*(?P<id>[^:]+):(?P<name>[^\n]+)\n(?P<desc>.*)"
 device_name_reg = "^[a-zA-Z0-9\-\._]{2,64}$"
-link_name_reg = "^(fpPort[0-9]{1,4})|ma1$"
+link_name_reg = "^(fpPort[0-9]{1,4})|ma1|eth[0-9]+$"
 link_state_reg = "^[0-9]+:[ ]*(?P<intf>[^@:]+)(@[^:]+)?:"
 
 def get_args():
@@ -106,8 +107,8 @@ def setup_logger(logger, args, quiet=False):
 
     logger_handler = logging.StreamHandler(sys.stdout)
     if args.debug=="debug":
-        fmt = "%(process)d:%(threadName)s||%(asctime)s.%(msecs).03d||%(levelname)s||"
-        fmt+= "%(filename)s:(%(lineno)d)||%(message)s"
+        fmt = "%(process)d:%(threadName)s||%(asctime)s.%(msecs).03d||"
+        fmt+= "%(levelname)s||%(filename)s:(%(lineno)d)||%(message)s"
     else:
         fmt = "%(asctime)s  %(message)s"
         
@@ -191,8 +192,11 @@ def get_topology(topology_file = None):
                 return None
             # everything ok, add to devices
             devices[d["name"].lower()] = {
-                    "name": d["name"], "port": int(d["port"]), "port_internal": port_internal, "schema":d.get("schema","http"),
-                    "username":d.get("username", "admin"), "password":d.get("password", "snaproute"),
+                    "name": d["name"], "port": int(d["port"]), 
+                    "port_internal": port_internal, 
+                    "schema":d.get("schema","http"),
+                    "username":d.get("username", "admin"), 
+                    "password":d.get("password", "snaproute"),
                     "connections": [], "interfaces":[], "pid":"",
                     "dockerimage":d.get("dockerimage", docker_image),
                     "flexswitch":d.get("flexswitch", "_image_default_")
@@ -258,6 +262,7 @@ def get_topology(topology_file = None):
     except ValueError as e:
         logger.error("failed to parse topology json file: %s" % (
             topology_file))
+        logger.debug("error occurred: %s" % traceback.format_exc())
         return None
 
     if len(devices) > MAX_DEVICE_COUNT:
@@ -277,28 +282,28 @@ def check_docker_running():
     out = exec_cmd("docker ps", ignore_exception=True)
     return (out is not None)
 
-def check_docker_image():
+def check_docker_image(image):
     """ check if docker_image is present.  If not, print info message and
         pull it down
     """
-    img = docker_image.split(":")
+    img = image.split(":")
     if len(img) == 2:
         if len(img[0]) == 0 or len(img[1]) == 0:
-            raise Exception("invalid docker image name: %s" % docker_image)
+            raise Exception("invalid docker image name: %s" % image)
         cmd = "docker images | egrep \"^%s \" | egrep \"%s\" | wc -l"%(
                 img[0], img[1])
     else:
-        cmd = "docker images | egrep \"^%s \" | " % docker_image
+        cmd = "docker images | egrep \"^%s \" | " % image
         cmd+= "egrep \"latest\" | wc -l"
 
     out = exec_cmd(cmd)
     if out.strip() == "0":
-        linfo = "Downloading docker image: %s. " % docker_image
+        linfo = "Downloading docker image: %s. " % image
         linfo+= "This may take a few minutes..."
         logger.info(linfo)
-        out = exec_cmd("docker pull %s" % docker_image)
+        out = exec_cmd("docker pull %s" % image)
     else:
-        logger.debug("docker_image %s is present" % docker_image)
+        logger.debug("docker_image %s is present" % image)
 
 def container_exists(device_name):
     """ return true if a container (running or not running) with provided
@@ -339,8 +344,8 @@ def get_container_pid(device_name):
         return None
     return pid.strip()
 
-def create_flexswitch_container(device_name, device_port, device_port_internal, fs_image=None,
-                                dopt=None, dockerimage=None):
+def create_flexswitch_container(device_name, device_port, device_port_internal,
+                                fs_image=None, dopt=None, dockerimage=None):
     """ create flexswitch container with provided device_name. Calling
         function must call get_container_pid to reliably determine if 
         container was successfully started.
@@ -357,7 +362,7 @@ def create_flexswitch_container(device_name, device_port, device_port_internal, 
         cmd+= "--volume %s:%s:ro " % (fs_image, gen_flex_path)
     if dopt is not None: cmd+= "%s " % dopt
     cmd+= "--hostname=%s --name %s -p %s:%s %s" % (
-        device_name, device_name, device_port, device_port_internal, dockerimage)
+        device_name, device_name, device_port,device_port_internal,dockerimage)
     out = exec_cmd(cmd, ignore_exception=True)
     if out is None:
         logger.error("failed to create docker container: %s, %s" % (
@@ -470,9 +475,6 @@ def create_topology_connections(topo):
                 logger.error("Error occurred: %s" % traceback.format_exc())
                 all_connections_success = False
 
-        # rename management interface to ma1 now that netns has been setup
-        # rename_mgmt(pid1)
-
     return all_connections_success
 
 def connection_exists(pid1, pid2, link1, link2):
@@ -542,18 +544,6 @@ def clear_stale_connections():
             logger.debug("removing stale softlink: %s/%s" % (netns_dir,f))
             os.remove("%s/%s" % (netns_dir, f))
 
-def rename_mgmt(pid1, s="eth0", d="ma1"):
-    """ rename default eth0 interface to ma1. Operation for docker mgmt
-        interface needs to be shut, rename, no-shut
-    """
-    cmds = []
-    cmds.append("ip netns exec %s ip link set %s down" % (pid1, s))
-    cmds.append("ip netns exec %s ip link set %s name %s" % (pid1,s, d))
-    cmds.append("ip netns exec %s ip link set %s up" % (pid1,d))
-    
-    # execute commands
-    for c in cmds: exec_cmd(c, ignore_exception=True)
-
 def cleanup(topo):
     """ cleanup topology by deleting containers and removing links """
    
@@ -571,15 +561,17 @@ def generate_environment_variables(path):
     """ create/update environment variables file for use by stage files
     """
     env_path = "%s/.generated/source.env" % path
-    logger.info("generating environment variables in %s " % env_path)
+    logger.debug("generating environment variables in %s " % env_path)
     if not os.path.exists(os.path.dirname(env_path)):
         os.makedirs(os.path.dirname(env_path))
     try:
         with open(env_path, "w") as f:
             for device, attrs in sorted(topo.iteritems()):
                 for attr, value in sorted(attrs.iteritems()):
-                    if attr.upper() in ['PID','PORT','NAME','SCHEMA','USERNAME','PASSWORD']:
-                        f.write("%s_%s=%s\n" %(device.upper(), attr.upper(), value))
+                    if attr.upper() in ['PID','PORT','NAME','SCHEMA',
+                        'USERNAME','PASSWORD']:
+                        f.write("%s_%s=%s\n" %(device.upper(), attr.upper(), 
+                            value))
     except IOError as e:
         logger.error("failed to open %s: %s" % (env_path,e))
 
@@ -592,22 +584,14 @@ def execute_stages(path, stage=0):
         logger.info("applying stage %s configuration" % s)
         logger.debug("opening stage commands in %s" % fname)
         try:
-            logger.debug(exec_cmd("/bin/bash -c %s" % fname, ignore_exception=True))
-            '''
-            with open(fname, "r") as f:
-                curl_commands = []
-                for cmd in f.readlines():
-                    cmd = cmd.strip()
-                    if re.search("^curl[^|]+$", cmd) is not None:
-                        logger.debug(exec_cmd(cmd, ignore_exception=True))
-                    elif "curl" in cmd: 
-                        logger.debug("skipping invalid cmd: %s" % cmd)
-            '''
+            logger.debug(exec_cmd("/bin/bash -c %s" % fname, 
+                ignore_exception=True))
         except IOError as e:
             logger.error("failed to open %s: %s" % (fname,e)) 
             continue
 
-def verify_flexswitch_running(devices, timeout=90, uptime_threshold=10):
+def verify_flexswitch_running(devices, timeout=flexswitch_timeout, 
+                            uptime_threshold=10):
     """ for provided devices dictionary, wait for flexswitch to start
         if it has not started within the timeout manually start the process
     """
@@ -615,16 +599,18 @@ def verify_flexswitch_running(devices, timeout=90, uptime_threshold=10):
     device_state = {}
     for d in devices: 
         if devices[d].get("flexswitch", "_image_default_").upper() == "NA":
-	    continue
+            continue
         device_state[d] = {"name":d, "uptime":0, "ready":False,
             "port":devices[d]["port"]}
     start_ts = time.time()
     while start_ts + timeout > time.time():
-        # loop through all devices and check if sysd is currently running
+        # loop through all devices and check if system is ready
         waiting = False
         for d in device_state:
-            cmd ="curl --insecure -u %s:%s -s '%s://localhost:%s/public/v1/state/SystemStatus'"%(
-                devices[d]["username"], devices[d]["password"], devices[d]["schema"], device_state[d]["port"])
+            cmd ="curl --insecure -u %s:%s -s %s://localhost:%s/"%(
+                devices[d]["username"], devices[d]["password"], 
+                devices[d]["schema"], device_state[d]["port"])
+            cmd+= "public/v1/state/SystemStatus"
             out = exec_cmd(cmd, ignore_exception=True)
             if out is not None:
                 try:
@@ -959,20 +945,29 @@ if __name__ == "__main__":
         # any containers that will be automatically deleted
         if args.stage == 0:
             prompt_for_container_delete(topo)
-    
-        # check if flexswitch is present, if not perform docker pull
-        try: check_docker_image()
-        except Exception as e:
-            logger.error("Failed to verify/pull docker image: %s" % e)
-            sys.exit(1)
+
+        # get full list of all docker images that need to be deployed and 
+        # pre-download each
+        all_images = []
+        for k in topo:
+            d = topo[k]
+            if "dockerimage" in d and len(d["dockerimage"])>0 and \
+                d["dockerimage"] not in all_images:
+                all_images.append(d["dockerimage"])
+                try: check_docker_image(d["dockerimage"])
+                except Exception as e:
+                    logger.error("Failed to verify/pull docker image: %s" % e)
+                    sys.exit(1)
     
         # create containers and map pid to each device in topology
         start_success = True
         threads = []
         for device_name in sorted(topo.keys()):
             t = threading.Thread(target=create_flexswitch_container,
-                args=(device_name, topo[device_name]["port"], topo[device_name]["port_internal"],
-                      args.image,args.dopt, topo[device_name].get("dockerimage", docker_image)))
+                args=(device_name, topo[device_name]["port"], 
+                        topo[device_name]["port_internal"],
+                        args.image, args.dopt, 
+                        topo[device_name].get("dockerimage", docker_image)))
             threads.append(t)
         execute_threads(threads)
 
@@ -992,7 +987,7 @@ if __name__ == "__main__":
         if start_success:
             # verify/wait for flexswitch to start on all containers
             verify_flexswitch_running(topo)
-	    generate_environment_variables(current_lab["path"])
+            generate_environment_variables(current_lab["path"])
             # apply stage configs
             if args.stage>0: execute_stages(current_lab["path"], args.stage)
             logger.info("Successfully started '%s'" % current_lab["name"])

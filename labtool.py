@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 MAX_DEVICE_COUNT = 32
 MAX_THREADS = 16
-docker_image = "snaproute/dockerlab:flexswitch" #"snapos/flex:latest"
+docker_image = "snapos/flex:latest"
 netns_dir = "/var/run/netns/"
 fs_image_dir = "./images/"
 gen_flex_path = "/usr/local/flex.deb"

@@ -51,6 +51,9 @@ Each device can contain the following string attributes:
 * internal\_port: (optional, default:8080) internal port mapped to external host port
 * dockerimage: (optional, default:snapos/flex:latest) docker image to deploy on container
 * flexswitch: (optional) if a custom non-flexswitch dockerimage is specified then this value must be 'NA'
+* schema: (optional, default: http): http or https schema to use when connecting to flexswitch device.  
+* username: (optional, default: admin): basic auth username credential
+* password: (optional, default: snaproute): basic auth password credential
 
 Each connection will contain a source device, source port, destination device, and a destination port.
 
@@ -141,6 +144,33 @@ curl -sX PATCH -d '{"Enable":true}' 'http://localhost:8005/public/v1/config/LLDP
 # enable LLDP on spine2
 curl -sX PATCH -d '{"Enable":true}' 'http://localhost:8006/public/v1/config/LLDPGlobal'
 ```
+
+The staging bash scripts can access device information (container name, pid, port information, schema, and credentials) by sourcing the auto-generated source.env file created at lab runtime.  The file will be created in a hidden folder under the lab directory called '.generated'.  For example, after executing this lab the environment file will be as follows:
+
+```bash
+user1@ubuntu:~/dockerLab$ 
+cat labs/lab2/.generated/source.env
+HOST1_NAME=host1
+HOST1_PASSWORD=snaproute
+HOST1_PID=2564
+HOST1_PORT=8007
+HOST1_SCHEMA=http
+HOST1_USERNAME=admin
+<snip>
+SPINE1_NAME=spine1
+SPINE1_PASSWORD=snaproute
+SPINE1_PID=1618
+SPINE1_PORT=8005
+SPINE1_SCHEMA=http
+SPINE1_USERNAME=admin
+SPINE2_NAME=spine2
+SPINE2_PASSWORD=snaproute
+SPINE2_PID=1415
+SPINE2_PORT=8006
+SPINE2_SCHEMA=http
+SPINE2_USERNAME=admin
+```
+
 
 ## Run It
 

@@ -102,3 +102,4 @@ ENV/
 
 # local flexswitch image catch
 images/*
+labs/*/.generated/*

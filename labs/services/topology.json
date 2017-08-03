@@ -1,13 +1,21 @@
 {
     "devices":[
-        {"name":"services", "port":"8001", "dockerimage":"snaproute/dockerlab:services", "flexswitch":"NA"},
-        {"name":"switch1", "port":"8002"},
-        {"name":"switch2", "port":"8003"},
-        {"name":"switch3", "port":"8004"}
+        {"name":"switch1", "port":"8001", "port_internal":"443", "schema":"https"},
+        {"name":"switch2", "port":"8002", "port_internal":"443", "schema":"https"},
+        {"name":"switch3", "port":"8003", "port_internal":"443", "schema":"https"},
+        {"name":"services", "port":"8004", "dockerimage":"snaproute/dockerlab:sysadmin", "flexswitch":"NA"},
+        {"name":"client1", "port":"8005", "dockerimage":"snaproute/dockerlab:client", "flexswitch":"NA"},
+        {"name":"client2", "port":"8006", "dockerimage":"snaproute/dockerlab:client", "flexswitch":"NA"},
+        {"name":"mgmtswitch", "port":"8007", "port_internal":"443", "schema":"https"}
     ],
     "connections":[
         {"services":"fpPort1","switch1":"fpPort1"},
-        {"switch1":"fpPort2","switch2":"fpPort2"},
-        {"switch1":"fpPort3","switch3":"fpPort3"}
+        {"switch1":"fpPort2","switch2":"fpPort1"},
+        {"switch1":"fpPort3","switch3":"fpPort1"},
+        {"switch2":"fpPort2","client1":"fpPort1"},
+        {"switch3":"fpPort2","client2":"fpPort1"},
+	{"mgmtswitch":"fpPort1","switch1":"ma1"},
+	{"mgmtswitch":"fpPort2","switch2":"ma1"},
+	{"mgmtswitch":"fpPort3","switch3":"ma1"}
     ]
 }

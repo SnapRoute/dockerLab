@@ -12,7 +12,7 @@ fs_image_dir = "./images/"
 gen_flex_path = "/usr/local/flex.deb"
 lab_doc_reg = "^[ ]*(?P<id>[^:]+):(?P<name>[^\n]+)\n(?P<desc>.*)"
 device_name_reg = "^[a-zA-Z0-9\-\._]{2,64}$"
-link_name_reg = "^(fpPort[0-9]{1,4})$"
+link_name_reg = "^(fpPort[0-9]{1,4})|ma1$"
 link_state_reg = "^[0-9]+:[ ]*(?P<intf>[^@:]+)(@[^:]+)?:"
 
 def get_args():
@@ -123,7 +123,7 @@ def setup_logger(logger, args, quiet=False):
 def exec_cmd(cmd, ignore_exception=False):
     """ execute command and return stdout output - None on error """
     try:
-        logger.debug("excecuting command: %s" % cmd)
+        logger.debug("executing command: %s" % cmd)
         out = subprocess.check_output(cmd,shell=True,stderr=subprocess.STDOUT)
         return out
     except subprocess.CalledProcessError as e:
@@ -181,6 +181,7 @@ def get_topology(topology_file = None):
                 return None
             try:
                 port = int(d["port"])
+                port_internal = int(d.get("port_internal", "8080"))
                 if port >= 0xffff or port < 0x400:
                     logger.error("invalid port %s, must be between %d and %d"%(
                         port, 0x400, 0xffff))
@@ -190,9 +191,10 @@ def get_topology(topology_file = None):
                 return None
             # everything ok, add to devices
             devices[d["name"].lower()] = {
-                    "name": d["name"], "port": int(d["port"]),
+                    "name": d["name"], "port": int(d["port"]), "port_internal": port_internal, "schema":d.get("schema","http"),
+                    "username":d.get("username", "admin"), "password":d.get("password", "snaproute"),
                     "connections": [], "interfaces":[], "pid":"",
-                    "dockerimage":d.get("dockerimage", "snapos/flex:latest"),
+                    "dockerimage":d.get("dockerimage", docker_image),
                     "flexswitch":d.get("flexswitch", "_image_default_")
             }
 
@@ -337,7 +339,7 @@ def get_container_pid(device_name):
         return None
     return pid.strip()
 
-def create_flexswitch_container(device_name, device_port, fs_image=None,
+def create_flexswitch_container(device_name, device_port, device_port_internal, fs_image=None,
                                 dopt=None, dockerimage=None):
     """ create flexswitch container with provided device_name. Calling
         function must call get_container_pid to reliably determine if 
@@ -349,13 +351,13 @@ def create_flexswitch_container(device_name, device_port, fs_image=None,
     remove_flexswitch_container(device_name)
 
     # kickoff requested container
-    logger.info("creating container %s" % device_name)
-    cmd = "docker run -dt --log-driver=syslog --privileged --cap-add ALL "
+    logger.info("creating container %s using %s" % (device_name, dockerimage))
+    cmd = "docker run -dt --privileged --cap-add ALL "
     if fs_image is not None:
         cmd+= "--volume %s:%s:ro " % (fs_image, gen_flex_path)
     if dopt is not None: cmd+= "%s " % dopt
-    cmd+= "--hostname=%s --name %s -p %s:8080 %s" % (
-        device_name, device_name, device_port, dockerimage)
+    cmd+= "--hostname=%s --name %s -p %s:%s %s" % (
+        device_name, device_name, device_port, device_port_internal, dockerimage)
     out = exec_cmd(cmd, ignore_exception=True)
     if out is None:
         logger.error("failed to create docker container: %s, %s" % (
@@ -565,6 +567,22 @@ def cleanup(topo):
     try: clear_stale_connections()
     except Exception as e: pass
 
+def generate_environment_variables(path):
+    """ create/update environment variables file for use by stage files
+    """
+    env_path = "%s/.generated/source.env" % path
+    logger.info("generating environment variables in %s " % env_path)
+    if not os.path.exists(os.path.dirname(env_path)):
+        os.makedirs(os.path.dirname(env_path))
+    try:
+        with open(env_path, "w") as f:
+            for device, attrs in sorted(topo.iteritems()):
+                for attr, value in sorted(attrs.iteritems()):
+                    if attr.upper() in ['PID','PORT','NAME','SCHEMA','USERNAME','PASSWORD']:
+                        f.write("%s_%s=%s\n" %(device.upper(), attr.upper(), value))
+    except IOError as e:
+        logger.error("failed to open %s: %s" % (env_path,e))
+
 def execute_stages(path, stage=0):
     """ execute commands within all stage scripts from 0 to provided stage.
         Ensure only 'safe' curl commands are executed
@@ -574,6 +592,8 @@ def execute_stages(path, stage=0):
         logger.info("applying stage %s configuration" % s)
         logger.debug("opening stage commands in %s" % fname)
         try:
+            logger.debug(exec_cmd("/bin/bash -c %s" % fname, ignore_exception=True))
+            '''
             with open(fname, "r") as f:
                 curl_commands = []
                 for cmd in f.readlines():
@@ -582,6 +602,7 @@ def execute_stages(path, stage=0):
                         logger.debug(exec_cmd(cmd, ignore_exception=True))
                     elif "curl" in cmd: 
                         logger.debug("skipping invalid cmd: %s" % cmd)
+            '''
         except IOError as e:
             logger.error("failed to open %s: %s" % (fname,e)) 
             continue
@@ -602,8 +623,8 @@ def verify_flexswitch_running(devices, timeout=90, uptime_threshold=10):
         # loop through all devices and check if sysd is currently running
         waiting = False
         for d in device_state:
-            cmd ="curl -s 'http://localhost:%s/public/v1/state/SystemStatus'"%(
-                device_state[d]["port"])
+            cmd ="curl --insecure -u %s:%s -s '%s://localhost:%s/public/v1/state/SystemStatus'"%(
+                devices[d]["username"], devices[d]["password"], devices[d]["schema"], device_state[d]["port"])
             out = exec_cmd(cmd, ignore_exception=True)
             if out is not None:
                 try:
@@ -950,8 +971,8 @@ if __name__ == "__main__":
         threads = []
         for device_name in sorted(topo.keys()):
             t = threading.Thread(target=create_flexswitch_container,
-                args=(device_name, topo[device_name]["port"], args.image,
-                args.dopt, topo[device_name].get("dockerimage", docker_image)))
+                args=(device_name, topo[device_name]["port"], topo[device_name]["port_internal"],
+                      args.image,args.dopt, topo[device_name].get("dockerimage", docker_image)))
             threads.append(t)
         execute_threads(threads)
 
@@ -971,6 +992,7 @@ if __name__ == "__main__":
         if start_success:
             # verify/wait for flexswitch to start on all containers
             verify_flexswitch_running(topo)
+	    generate_environment_variables(current_lab["path"])
             # apply stage configs
             if args.stage>0: execute_stages(current_lab["path"], args.stage)
             logger.info("Successfully started '%s'" % current_lab["name"])

@@ -1,0 +1,4 @@
+auto fpPort1
+iface fpPort1 inet static
+    address 10.0.0.254/24
+    gateway 10.0.0.1

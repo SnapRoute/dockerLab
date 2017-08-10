@@ -663,7 +663,7 @@ def check_flexswitch_image(img=None):
         return None if invalid else returns full image path
     """
     if img is None: return None
-    img_reg = "^flexswitch_docker[a-z0-9\_\-\.]+\.deb$"
+    img_reg = "(?i)^flexswitch_docker[a-z0-9\_\-\.]+\.deb$"
     # download image first if url is provided
     if re.search("^http", img) is not None:
         img_name = img.split("/")[-1]

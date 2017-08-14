@@ -1,5 +1,5 @@
 FROM ubuntu:latest
-ADD context/* /local/
+ADD context/ /local/
 WORKDIR /local/
 
 RUN apt-get -y update && \
@@ -11,7 +11,7 @@ RUN apt-get -y update && \
         vim \
     && \
     apt-get clean all
-
+RUN ls -la /local/
 RUN cp -Rf /local/etc/* /etc
 
 ENTRYPOINT ["/local/docker_startup.sh"]

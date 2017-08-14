@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
-./docker_build_wrapper.sh snaproute/dockerlab device_base Dockerfile.device_base device_base/
-./docker_build_wrapper.sh snaproute/dockerlab client Dockerfile.client client/
-./docker_build_wrapper.sh snaproute/dockerlab sysadmin Dockerfile.sysadmin sysadmin/
+DOCKER_BUILD_WRAPPER=scripts/docker_build_wrapper.sh
+
+$DOCKER_BUILD_WRAPPER snaproute/labs device_base device_base/Dockerfile device_base/context/
+$DOCKER_BUILD_WRAPPER snaproute/labs client client/Dockerfile client/context/
+$DOCKER_BUILD_WRAPPER snaproute/labs sysadmin sysadmin/Dockerfile sysadmin/context/

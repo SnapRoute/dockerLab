@@ -1,4 +1,4 @@
-FROM snaproute/dockerlab:device_base
+FROM snaproute/labs:device_base
 
 RUN apt-get -y update && \
     apt-get -y install \
@@ -10,7 +10,7 @@ RUN apt-get -y update && \
     && \
     apt-get clean all
 
-ADD context/* /local/
+ADD context/ /local/
 WORKDIR /local/
 
 RUN cp -Rf /local/etc/* /etc && \

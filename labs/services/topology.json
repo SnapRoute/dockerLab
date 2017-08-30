@@ -9,11 +9,11 @@
         {"name":"mgmtswitch", "port":"8007", "port_internal":"443", "schema":"https"}
     ],
     "connections":[
-        {"services":"fpPort1","switch1":"fpPort1"},
+        {"services":"eth0","switch1":"fpPort1"},
         {"switch1":"fpPort2","switch2":"fpPort1"},
         {"switch1":"fpPort3","switch3":"fpPort1"},
-        {"switch2":"fpPort2","client1":"fpPort1"},
-        {"switch3":"fpPort2","client2":"fpPort1"},
+        {"switch2":"fpPort2","client1":"eth0"},
+        {"switch3":"fpPort2","client2":"eth0"},
 	{"mgmtswitch":"fpPort1","switch1":"ma1"},
 	{"mgmtswitch":"fpPort2","switch2":"ma1"},
 	{"mgmtswitch":"fpPort3","switch3":"ma1"}

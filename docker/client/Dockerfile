@@ -1,6 +1,6 @@
-FROM snaproute/dockerlab:device_base
+FROM snaproute/labs:device_base
 
-ADD context/* /local/
+ADD context/ /local/
 WORKDIR /local/
 
 RUN cp -Rf /local/etc/* /etc
